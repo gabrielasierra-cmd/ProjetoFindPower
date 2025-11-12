@@ -1,0 +1,29 @@
+{
+    "project_info": {
+    "project_number": "186042715330",
+    "project_id": "findpower-640bb",
+    "storage_bucket": "findpower-640bb.firebasestorage.app"
+},
+    "client": [
+    {
+        "client_info": {
+        "mobilesdk_app_id": "1:186042715330:android:f237431408bddbac72bf5b",
+        "android_client_info": {
+        "package_name": "com.example.projetofindpower"
+    }
+    },
+        "oauth_client": [],
+        "api_key": [
+        {
+            "current_key": "AIzaSyBidqE4mRhuKQLTK4141LqxL9CJc5qHz70"
+        }
+        ],
+        "services": {
+        "appinvite_service": {
+        "other_platform_oauth_client": []
+    }
+    }
+    }
+    ],
+    "configuration_version": "1"
+}
