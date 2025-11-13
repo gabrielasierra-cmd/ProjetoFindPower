@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,6 +8,7 @@
     android:layout_height="match_parent"
     android:background="#FFFDF6"
     android:orientation="vertical"
+    android:gravity="center_horizontal"
     tools:context=".view.MainActivity">
 
     <!-- Título -->
@@ -18,9 +20,6 @@
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="#004D40"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="32dp"/>
 
     <!-- Logo -->
@@ -28,11 +27,8 @@
         android:id="@+id/logo"
         android:layout_width="160dp"
         android:layout_height="160dp"
-        android:src="@logo"
+        android:src="@drawable/logo"
         android:contentDescription="Logo FinPower"
-        app:layout_constraintTop_toBottomOf="@id/titulo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
     <!-- Frase de impacto -->
@@ -40,70 +36,56 @@
         android:id="@+id/frase"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Teu Dinhero,Teu Poder "
+        android:text="Teu Dinheiro, Teu Poder"
         android:textSize="16sp"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/logo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
     <!-- Botão Digitalizar -->
     <Button
         android:id="@+id/btnDigitalizar"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="📷 Digitalizar Despesa"
         android:backgroundTint="#E0F2F1"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/frase"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="32dp"/>
 
     <!-- Botão Categorias -->
     <Button
         android:id="@+id/btnCategorias"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🗂️ Categorias"
         android:backgroundTint="#E0F2F1"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/btnDigitalizar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
-    <!-- Aqui é onde o Compose vai ser exibido -->
+
+    <!-- Área do Compose -->
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
 
     <!-- Botão Relatórios -->
     <Button
         android:id="@+id/btnRelatorios"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="📊 Relatórios"
         android:backgroundTint="#E0F2F1"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/btnCategorias"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="16dp" />
 
     <!-- Botão Partilhar -->
     <Button
         android:id="@+id/btnPartilhar"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🤝 Partilhar"
         android:backgroundTint="#E0F2F1"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/btnRelatorios"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>
