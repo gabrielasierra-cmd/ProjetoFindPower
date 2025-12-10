@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetoFindPower">
         <activity
+            android:name=".PartilhasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RelatoriosActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CategoriasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DigitalizarActivity"
+            android:exported="false" />
+        <activity
             android:name=".view.MainActivity"
             android:exported="true">
             <intent-filter>

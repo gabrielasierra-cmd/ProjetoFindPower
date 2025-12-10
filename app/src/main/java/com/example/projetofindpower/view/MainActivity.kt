@@ -1,16 +1,19 @@
 package com.example.projetofindpower.view
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.projetofindpower.CategoriasActivity
+import com.example.projetofindpower.DigitalizarActivity
 import com.example.projetofindpower.R
-import com.example.projetofindpower.controller.DespesaController
-import com.example.projetofindpower.model.DespesaApi
-import com.example.projetofindpower.model.DespesaDao
-import com.example.projetofindpower.repository.DespesaRepository
+import com.example.projetofindpower.view.CategoriasActivity
+import com.example.projetofindpower.view.DigitalizarActivity
+import com.example.projetofindpower.view.PartilhasActivity
+import com.example.projetofindpower.view.RelatoriosActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,21 +21,31 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // Ajuste das margens do sistema (padrão Android Studio)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Criação do repositório e do ViewModel
-        val repository = DespesaRepository(DespesaDao(), DespesaApi())
-        val viewModel = DespesaController(repository)
+        val btnDigitalizar = findViewById<Button>(R.id.btnDigitalizar)
+        val btnCategorias = findViewById<Button>(R.id.btnCategorias)
+        val btnRelatorios = findViewById<Button>(R.id.btnRelatorios)
+        val btnPartilhar = findViewById<Button>(R.id.btnPartilhar)
 
-        // Encontra o container Compose dentro do XML e injeta a tela
-        val composeView = findViewById<ComposeView>(R.id.composeContainer)
-        composeView.setContent {
-            ListaDespesasScreen(viewModel)
+        btnDigitalizar.setOnClickListener {
+            startActivity(Intent(this, DigitalizarActivity::class.java))
+        }
+
+        btnCategorias.setOnClickListener {
+            startActivity(Intent(this, CategoriasActivity::class.java))
+        }
+
+        btnRelatorios.setOnClickListener {
+            startActivity(Intent(this, RelatoriosActivity::class.java))
+        }
+
+        btnPartilhar.setOnClickListener {
+            startActivity(Intent(this, PartilhasActivity::class.java))
         }
     }
 }
