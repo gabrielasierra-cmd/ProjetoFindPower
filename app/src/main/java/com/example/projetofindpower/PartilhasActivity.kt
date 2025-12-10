@@ -1,11 +1,12 @@
-package com.example.projetofindpower.view
+package com.example.projetofindpower
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.projetofindpower.R
 
 class PartilhasActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,12 @@ class PartilhasActivity : AppCompatActivity() {
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        val btnPartilharAgora = findViewById<Button>(R.id.btnPartilharAgora)
+        btnPartilharAgora.setOnClickListener {
+            val intent = Intent(this, RelatoriosActivity::class.java)
+            startActivity(intent)
         }
     }
 }

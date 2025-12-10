@@ -1,12 +1,13 @@
-package com.example.projetofindpower.view
+package com.example.projetofindpower
 
 import android.graphics.Color
 import android.os.Bundle
+import android.widget.Button
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.projetofindpower.R
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -19,8 +20,9 @@ class RelatoriosActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_relatorios)
 
-        // Ajuste das barras do sistema
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        // ✅ Ajuste das barras do sistema
+        val mainView = findViewById<android.view.View>(R.id.main)
+        ViewCompat.setOnApplyWindowInsetsListener(mainView) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
@@ -54,5 +56,11 @@ class RelatoriosActivity : AppCompatActivity() {
         pieChart.animateY(1000)
 
         pieChart.invalidate()
+
+        // ✅ Botão "Gerar Relatório"
+        val btnGerarRelatorio = findViewById<Button>(R.id.btnGerarRelatorio)
+        btnGerarRelatorio.setOnClickListener {
+            Toast.makeText(this, "Relatório gerado com sucesso ✅", Toast.LENGTH_SHORT).show()
+        }
     }
 }

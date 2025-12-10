@@ -9,7 +9,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.projetofindpower.CategoriasActivity
 import com.example.projetofindpower.DigitalizarActivity
+import com.example.projetofindpower.PartilhasActivity
 import com.example.projetofindpower.R
+import com.example.projetofindpower.RelatoriosActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
