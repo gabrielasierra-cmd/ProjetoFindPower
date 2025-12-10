@@ -2,6 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 📸 Recursos e permissões globais -->
+    <!-- Declara que a app pode usar a câmera, mas não é obrigatória -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- Permissões necessárias -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Necessário apenas em Android 9 ou inferior para salvar fotos na galeria -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,6 +23,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetoFindPower">
+
+        <!-- Outras Activities da aplicação -->
         <activity
             android:name=".PartilhasActivity"
             android:exported="false" />
@@ -20,18 +34,23 @@
         <activity
             android:name=".CategoriasActivity"
             android:exported="false" />
+
+        <!-- Activity para digitalizar despesas -->
         <activity
             android:name=".DigitalizarActivity"
             android:exported="false" />
+
+        <!-- Activity principal (ponto de entrada da app) -->
         <activity
             android:name=".view.MainActivity"
             android:exported="true">
             <intent-filter>
+                <!-- Define que esta Activity é a inicial -->
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>
