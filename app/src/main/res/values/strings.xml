@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ProjetoFindPower</string>
+    <string name="p1">📷DigitalizarDespensa:</string>
+    <string name="p2">🗂️Categorias</string>
+    <string name="p3">📊Relatorios</string>
+    <string name="p4">🤝Partilhas</string>
 </resources>

@@ -53,26 +53,28 @@
         android:id="@+id/btnDigitalizar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="📷 Digitalizar Despesa"
+        android:layout_marginTop="32dp"
         android:backgroundTint="#E0F2F1"
+        android:onClick="@string/p1"
+        android:text="@string/p1"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/frase"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frase" />
 
     <!-- Botão Categorias -->
     <Button
         android:id="@+id/btnCategorias"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="🗂️ Categorias"
+        android:layout_marginTop="16dp"
         android:backgroundTint="#E0F2F1"
+        android:onClick="@string/p2"
+        android:text="@string/p2"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/btnDigitalizar"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnDigitalizar" />
 
     <!-- Compose container -->
     <androidx.compose.ui.platform.ComposeView
@@ -88,24 +90,26 @@
         android:id="@+id/btnRelatorios"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="📊 Relatórios"
+        android:layout_marginTop="16dp"
         android:backgroundTint="#E0F2F1"
+        android:onClick="@string/p3"
+        android:text="@string/p3"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/composeContainer"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/composeContainer" />
 
     <!-- Botão Partilhar -->
     <Button
         android:id="@+id/btnPartilhar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="🤝 Partilhar"
+        android:layout_marginTop="16dp"
         android:backgroundTint="#E0F2F1"
+        android:onClick="@string/p4"
+        android:text="@string/p4"
         android:textColor="#004D40"
-        app:layout_constraintTop_toBottomOf="@id/btnRelatorios"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnRelatorios" />
 </androidx.constraintlayout.widget.ConstraintLayout>

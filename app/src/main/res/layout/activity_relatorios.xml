@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    android:background="#FAFAFA">
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChart"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_marginTop="32dp" />
+    <!-- Título -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Relatórios"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#222"
+        android:paddingBottom="32dp" />
+
+    <!-- Texto explicativo -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Aqui você poderá visualizar os relatórios financeiros."
+        android:textSize="16sp"
+        android:textColor="#555"
+        android:gravity="center"
+        android:paddingBottom="24dp" />
+
+    <!-- Botão de exemplo -->
+    <Button
+        android:id="@+id/btnGerarRelatorio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gerar Relatório"
+        android:backgroundTint="#2196F3"
+        android:textColor="@android:color/white"
+        android:padding="12dp" />
+
+</LinearLayout>
