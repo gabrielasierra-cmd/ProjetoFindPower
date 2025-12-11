@@ -1,4 +1,4 @@
-package com.example.projetofindpower.view
+package com.example.projetofindpower
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,12 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.projetofindpower.CategoriasActivity
-import com.example.projetofindpower.DigitalizarActivity
-import com.example.projetofindpower.PartilhasActivity
-import com.example.projetofindpower.R
-import com.example.projetofindpower.RelatoriosActivity
+import dagger.hilt.android.AndroidEntryPoint
 
+
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
