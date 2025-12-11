@@ -1,4 +1,4 @@
-package com.example.projetofindpower.view
+package com.example.projetofindpower
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,15 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.activity.viewModels // Importa o delegado viewModels
-import com.example.projetofindpower.controller.DespesaController // Assumindo que este é o seu ViewModel
-import com.example.projetofindpower.view.ListaDespesasScreen
 import dagger.hilt.android.AndroidEntryPoint
-import com.example.projetofindpower.CategoriasActivity
-import com.example.projetofindpower.DigitalizarActivity
-import com.example.projetofindpower.PartilhasActivity
-import com.example.projetofindpower.R
-import com.example.projetofindpower.RelatoriosActivity
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

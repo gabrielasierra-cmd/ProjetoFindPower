@@ -60,10 +60,10 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         // Se já estiver logado, navega diretamente para a Home
-        if (authRepository.getCurrentUser() != null) {
+       /* if (authRepository.getCurrentUser() != null) {
             navegarParaHome()
             return
-        }
+        }*/
 
         inicializarViews()
         configurarGoogleSignIn()
