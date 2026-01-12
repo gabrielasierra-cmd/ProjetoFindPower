@@ -45,7 +45,7 @@
         <activity android:name=".RelatoriosActivity" android:exported="false" />
         <activity android:name=".CategoriasActivity" android:exported="false" />
         <activity android:name=".DigitalizarActivity" android:exported="false" />
-
+        <activity android:name=".NovaDespesaActivity" android:exported="false" />
     </application>
 
 </manifest>

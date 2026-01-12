@@ -1,25 +1,38 @@
 package com.example.projetofindpower.repository
 
 import com.example.projetofindpower.model.Despesa
-import com.example.projetofindpower.model.DespesaDao
-import com.example.projetofindpower.model.DespesaApi
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class DespesaRepository(
-    private val dao: DespesaDao,
-    private val api: DespesaApi
-) {
+class DespesaRepository @Inject constructor() {
 
-    suspend fun getDespesas(userId: String): List<Despesa> {
-        val local = dao.getByUser(userId)
-        return local.ifEmpty {
-            val remoto = api.getDespesas(userId)
-            remoto.forEach { dao.insert(it) }
-            remoto
-        }
+    private val database = FirebaseDatabase.getInstance().reference
+
+    /**
+     * Salva a despesa no Firebase Realtime Database
+     */
+    suspend fun saveExpense(despesa: Despesa) {
+        database.child("users")
+            .child(despesa.idUtilizador)
+            .child("expenses")
+            .child(despesa.idDespesa)
+            .setValue(despesa)
+            .await()
     }
 
-    suspend fun criarDespesa(despesa: Despesa) {
-        dao.insert(despesa)
-        api.criarDespesa(despesa)
+    /**
+     * Recupera todas as despesas de um utilizador específico
+     */
+    suspend fun getExpensesByUser(userId: String): List<Despesa> {
+        val snapshot = database.child("users").child(userId).child("expenses").get().await()
+        val listaDespesas = mutableListOf<Despesa>()
+
+        snapshot.children.forEach { child ->
+            child.getValue(Despesa::class.java)?.let {
+                listaDespesas.add(it)
+            }
+        }
+        return listaDespesas
     }
 }

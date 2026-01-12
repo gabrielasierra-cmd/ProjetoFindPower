@@ -17,7 +17,7 @@ class DespesaController(
 
     fun carregarDespesas(userId: String) {
         viewModelScope.launch {
-            _despesas.value = repository.getDespesas(userId)
+            _despesas.value = repository.getExpensesByUser(userId)
         }
     }
 }

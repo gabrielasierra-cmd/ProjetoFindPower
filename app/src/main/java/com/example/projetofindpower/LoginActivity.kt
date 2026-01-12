@@ -22,32 +22,25 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Marca a Activity para injeção de dependência via Hilt
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
 
-    // Injeção de dependência do Repositório (Hilt)
     @Inject
     lateinit var authRepository: AuthRepository
 
-    // Variáveis da UI
     private lateinit var emailEditText: EditText
     private lateinit var senhaEditText: EditText
     private lateinit var loginButton: Button
     private lateinit var registerButton: Button
     private lateinit var googleSignInButton: SignInButton
-
-    // Cliente para configurar e iniciar o fluxo do Google Sign-In
     private lateinit var googleSignInClient: GoogleSignInClient
 
-    // Launcher para receber o resultado do fluxo do Google Sign-In
     private val googleSignInLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 try {
                     val account = task.getResult(ApiException::class.java)!!
-                    // Autentica no Firebase com o token do Google
                     firebaseAuthWithGoogle(account.idToken!!)
                 } catch (e: ApiException) {
                     Toast.makeText(this, "Falha no Login Google: ${e.message}", Toast.LENGTH_LONG).show()
@@ -59,23 +52,20 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Se já estiver logado, navega diretamente para a Home
-       /* if (authRepository.getCurrentUser() != null) {
+        if (authRepository.getCurrentUser() != null) {
             navegarParaHome()
             return
-        }*/
+        }
 
         inicializarViews()
         configurarGoogleSignIn()
 
-        // Configurações EdgeToEdge (pode ser necessário ou não dependendo do seu layout)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_login)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Definir os Listeners de Ação
         loginButton.setOnClickListener {
             fazerLogin(emailEditText.text.toString(), senhaEditText.text.toString())
         }
@@ -88,8 +78,6 @@ class LoginActivity : AppCompatActivity() {
             signInWithGoogle()
         }
     }
-
-    // --- FUNÇÕES DE INICIALIZAÇÃO ---
 
     private fun inicializarViews() {
         emailEditText = findViewById(R.id.email_edit_text)
@@ -108,8 +96,6 @@ class LoginActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
-    // --- FUNÇÕES DE AUTENTICAÇÃO E COROUTINES ---
-
     private fun fazerLogin(email: String, senha: String) {
         if (email.isBlank() || senha.isBlank()) {
             Toast.makeText(this, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
@@ -119,6 +105,7 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val user = authRepository.signIn(email, senha)
+                authRepository.saveUserData(user.uid, user.email ?: "")
                 Toast.makeText(this@LoginActivity, "Login de ${user.email} OK!", Toast.LENGTH_LONG).show()
                 navegarParaHome()
             } catch (e: Exception) {
@@ -137,6 +124,7 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val user = authRepository.createUser(email, senha)
+                authRepository.saveUserData(user.uid, user.email ?: "")
                 Toast.makeText(this@LoginActivity, "Usuário ${user.email} criado com sucesso!", Toast.LENGTH_LONG).show()
                 navegarParaHome()
             } catch (e: Exception) {
@@ -155,6 +143,7 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val user = authRepository.signInWithGoogle(idToken)
+                authRepository.saveUserData(user.uid, user.email ?: "")
                 Toast.makeText(this@LoginActivity, "Login Google de ${user.email} OK!", Toast.LENGTH_SHORT).show()
                 navegarParaHome()
             } catch (e: Exception) {
@@ -163,10 +152,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // --- FUNÇÃO DE NAVEGAÇÃO CORRIGIDA ---
-
     private fun navegarParaHome() {
-        // CORREÇÃO FINAL: O Intent inicia a Activity de destino (FinPowerActivity)
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()

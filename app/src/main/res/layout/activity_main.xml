@@ -7,7 +7,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFDF6"
-    tools:context=".FinPowerApplication">
+    tools:context=".MainActivity">
+
+    <!-- BOTÃO DE LOGOUT (Canto superior direito) -->
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="Sair"
+        android:textSize="12sp"
+        android:backgroundTint="#FFEBEE"
+        android:textColor="#C62828"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Título -->
     <TextView
@@ -18,10 +32,10 @@
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="#004D40"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnLogout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"/>
+        android:layout_marginTop="8dp"/>
 
     <!-- Logo -->
     <ImageView
@@ -48,19 +62,34 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
+    <!-- BOTÃO NOVA DESPESA (Destaque Principal) -->
+    <Button
+        android:id="@+id/btnNovaDespesa"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="32dp"
+        android:backgroundTint="#004D40"
+        android:text="Nova Despesa +"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frase" />
+
     <!-- Botão Digitalizar -->
     <Button
         android:id="@+id/btnDigitalizar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:onClick="@string/p1"
         android:text="@string/p1"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/frase" />
+        app:layout_constraintTop_toBottomOf="@id/btnNovaDespesa" />
 
     <!-- Botão Categorias -->
     <Button
@@ -68,8 +97,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:onClick="@string/p2"
         android:text="@string/p2"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
@@ -91,8 +120,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:onClick="@string/p3"
         android:text="@string/p3"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
@@ -105,11 +134,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:onClick="@string/p4"
         android:text="@string/p4"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnRelatorios" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,39 +9,48 @@
     android:gravity="center_horizontal"
     android:background="#FAFAFA">
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pieChart"
-        android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:layout_marginTop="32dp" />
-    <!-- Título -->
     <TextView
+        android:id="@+id/tvTitulo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Relatórios"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="#222"
-        android:paddingBottom="32dp" />
+        android:layout_marginTop="16dp" />
 
-    <!-- Texto explicativo -->
     <TextView
+        android:id="@+id/tvDescricao"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Aqui você poderá visualizar os relatórios financeiros."
+        android:text="Distribuição de gastos por categoria"
         android:textSize="16sp"
         android:textColor="#555"
         android:gravity="center"
-        android:paddingBottom="24dp" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
 
-    <!-- Botão de exemplo -->
+    <!-- O Gráfico ocupa o espaço central -->
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="24dp" />
+
+    <!-- O Botão para Gerar/Atualizar o Relatório -->
     <Button
         android:id="@+id/btnGerarRelatorio"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Gerar Relatório"
-        android:backgroundTint="#2196F3"
+        android:backgroundTint="#004D40"
         android:textColor="@android:color/white"
-        android:padding="12dp" />
+        android:padding="12dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        app:icon="@android:drawable/ic_menu_revert"
+        app:iconGravity="textStart" />
 
 </LinearLayout>
