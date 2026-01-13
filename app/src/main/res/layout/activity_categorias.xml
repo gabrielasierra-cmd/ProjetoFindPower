@@ -23,49 +23,49 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
             android:background="@android:color/white"
-            android:padding="16dp"
             android:elevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginRight="16dp"
                 android:src="@android:drawable/ic_menu_gallery"
-                android:tint="#FF9800"
-                android:layout_marginRight="16dp" />
+                android:tint="#FF9800" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Lazer"
-                android:textSize="20sp"
-                android:textColor="#333" />
+                android:textColor="#333"
+                android:textSize="20sp" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
             android:background="@android:color/white"
-            android:padding="16dp"
             android:elevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginRight="16dp"
                 android:src="@android:drawable/ic_dialog_alert"
-                android:tint="#F44336"
-                android:layout_marginRight="16dp" />
+                android:tint="#F44336" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Emergência"
-                android:textSize="20sp"
-                android:textColor="#333" />
+                android:textColor="#333"
+                android:textSize="20sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -141,28 +141,55 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_width="352dp"
+            android:layout_height="54dp"
+            android:layout_marginBottom="16dp"
             android:background="@android:color/white"
-            android:padding="16dp"
             android:elevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal"
+            android:padding="16dp">
 
             <ImageView
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginRight="16dp"
                 android:src="@android:drawable/ic_menu_compass"
-                android:tint="#03A9F4"
-                android:layout_marginRight="16dp" />
+                android:tint="#03A9F4" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Viagens"
-                android:textSize="20sp"
-                android:textColor="#333" />
+                android:textColor="#333"
+                android:textSize="20sp" />
+
         </LinearLayout>
+
+        <!-- Botão Excluir Despensa (PEQUENO) -->
+        <Button
+            android:id="@+id/btnExcluirDespensa"
+            android:layout_width="120dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="16dp"
+            android:background="#D32F2F"
+            android:elevation="4dp"
+            android:text="Excluir"
+            android:textSize="12sp"
+            android:padding="4dp"
+            android:textColor="#FFFFFF" />
+
+        <!-- Botão Adicionar Despensa (PEQUENO) -->
+        <Button
+            android:id="@+id/btnAdicionarDespensa"
+            android:layout_width="120dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="12dp"
+            android:background="#4CAF50"
+            android:elevation="4dp"
+            android:padding="4dp"
+            android:text="Adicionar"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

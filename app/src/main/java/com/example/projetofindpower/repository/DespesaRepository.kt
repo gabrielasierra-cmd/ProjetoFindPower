@@ -22,4 +22,7 @@ class DespesaRepository(
         dao.insert(despesa)
         api.criarDespesa(despesa)
     }
+    suspend fun deleteDespesa(despesa: Despesa) {
+        dao.delete(despesa)
+    }
 }
