@@ -1,21 +1,30 @@
 package com.example.projetofindpower.model
 
-class AppDatabase private constructor() {
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
-    private val despesaDaoInstance = DespesaDao()
+@Database(entities = [Despesa::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
 
-    fun despesaDao(): DespesaDao = despesaDaoInstance
+    abstract fun despesaDao(): DespesaDao
 
     companion object {
-        // Singleton — garante uma única instância no app
         @Volatile
-        private var instance: AppDatabase? = null
+        private var INSTANCE: AppDatabase? = null
 
-        fun getInstance(): AppDatabase {
-            return instance ?: synchronized(this) {
-                val newInstance = AppDatabase()
-                instance = newInstance
-                newInstance
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "findpower_database"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                INSTANCE = instance
+                instance
             }
         }
     }

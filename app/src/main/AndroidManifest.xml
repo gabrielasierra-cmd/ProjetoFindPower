@@ -2,12 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 📸 Recursos e permissões globais -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
 
-    <!-- Permissões necessárias -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -23,15 +21,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjetoFindPower">
 
-        <!-- AdMob -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>
 
-        <!-- Tela de Login é a primeira a abrir -->
         <activity
-            android:name=".LoginActivity"
-            android:theme="@style/Theme.ProjetoFindPower"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,13 +34,19 @@
             </intent-filter>
         </activity>
 
-        <!-- Outras Activities -->
-        <activity android:name=".MainActivity" android:exported="true" />
+        <activity
+            android:name=".LoginActivity"
+            android:theme="@style/Theme.ProjetoFindPower"
+            android:exported="true">
+        </activity>
+
         <activity android:name=".PartilhasActivity" android:exported="false" />
         <activity android:name=".RelatoriosActivity" android:exported="false" />
         <activity android:name=".CategoriasActivity" android:exported="false" />
         <activity android:name=".DigitalizarActivity" android:exported="false" />
         <activity android:name=".NovaDespesaActivity" android:exported="false" />
+        <activity android:name=".HistoricoMensalActivity" android:exported="false" />
+        <activity android:name=".HistoricoAnualActivity" android:exported="false" />
     </application>
 
 </manifest>

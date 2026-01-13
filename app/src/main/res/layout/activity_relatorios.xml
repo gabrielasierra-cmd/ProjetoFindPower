@@ -1,56 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center_horizontal"
-    android:background="#FAFAFA">
+    android:background="#F5F5F5">
 
-    <TextView
-        android:id="@+id/tvTitulo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Relatórios"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="#222"
-        android:layout_marginTop="16dp" />
-
-    <TextView
-        android:id="@+id/tvDescricao"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Distribuição de gastos por categoria"
-        android:textSize="16sp"
-        android:textColor="#555"
-        android:gravity="center"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <!-- O Gráfico ocupa o espaço central -->
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pieChart"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="24dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relatórios Financeiros"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#333"
+            android:layout_marginBottom="16dp" />
 
-    <!-- O Botão para Gerar/Atualizar o Relatório -->
-    <Button
-        android:id="@+id/btnGerarRelatorio"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Gerar Relatório"
-        android:backgroundTint="#004D40"
-        android:textColor="@android:color/white"
-        android:padding="12dp"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp"
-        app:icon="@android:drawable/ic_menu_revert"
-        app:iconGravity="textStart" />
+        <!-- GRÁFICO -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pieChart"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:layout_marginBottom="16dp" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/btnGerarRelatorio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Atualizar Gráfico Geral"
+            android:layout_marginBottom="16dp" />
+
+        <!-- NOVO BOTÃO DE EXPORTAÇÃO -->
+        <Button
+            android:id="@+id/btnExportarPlanilha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Exportar para Google Planilhas"
+            android:backgroundTint="#2E7D32"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDD"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Consultar Histórico"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#555"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnAbrirHistoricoMensal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ver Histórico Mensal"
+            android:backgroundTint="#E0F2F1"
+            android:textColor="#004D40"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnAbrirHistoricoAnual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ver Histórico Anual"
+            android:backgroundTint="#E0F2F1"
+            android:textColor="#004D40"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+</ScrollView>

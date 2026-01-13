@@ -32,13 +32,29 @@ class CategoriasActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Vincula os cliques dos IDs do seu XML às categorias correspondentes
         findViewById<LinearLayout>(R.id.btnLazer).setOnClickListener { buscarEFiltar("Lazer") }
         findViewById<LinearLayout>(R.id.btnEmergencia).setOnClickListener { buscarEFiltar("Emergência") }
         findViewById<LinearLayout>(R.id.btnContasFixas).setOnClickListener { buscarEFiltar("Contas Fixas") }
         findViewById<LinearLayout>(R.id.btnPoupanca).setOnClickListener { buscarEFiltar("Poupança") }
         findViewById<LinearLayout>(R.id.btnExtras).setOnClickListener { buscarEFiltar("Extras") }
         findViewById<LinearLayout>(R.id.btnViagens).setOnClickListener { buscarEFiltar("Viagens") }
+        findViewById<LinearLayout>(R.id.btnTodasDespesas).setOnClickListener { buscarTodas() }
+    }
+
+    private fun buscarTodas() {
+        val userId = authRepository.getCurrentUser()?.uid ?: run {
+            Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val listaDespesas = expenseRepository.getExpensesByUser(userId)
+                exibirPopupDetalhado("Todas as Despesas", listaDespesas)
+            } catch (e: Exception) {
+                Toast.makeText(this@CategoriasActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun buscarEFiltar(categoria: String) {
@@ -46,12 +62,8 @@ class CategoriasActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Busca despesas do Firebase através do Repositório
-                val todasDespesas = expenseRepository.getExpensesByUser(userId)
-
-                // Filtra as despesas pela categoria clicada
-                val filtradas = todasDespesas.filter { it.tipo == categoria }
-
+                // REFACTOR: Chamando o filtro direto do repositório
+                val filtradas = expenseRepository.getExpensesByCategory(userId, categoria)
                 exibirPopupDetalhado(categoria, filtradas)
             } catch (e: Exception) {
                 Toast.makeText(this@CategoriasActivity, "Erro ao carregar: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -59,35 +71,31 @@ class CategoriasActivity : AppCompatActivity() {
         }
     }
 
-    private fun exibirPopupDetalhado(categoria: String, lista: List<Despesa>) {
+    private fun exibirPopupDetalhado(titulo: String, lista: List<Despesa>) {
         val total = lista.sumOf { it.valor }
-
-        // Formata para exibir o mês por extenso (ex: Janeiro / 2026)
         val sdfMes = SimpleDateFormat("MMMM / yyyy", Locale("pt", "PT"))
 
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Resumo: $categoria")
+        builder.setTitle(titulo)
 
         if (lista.isEmpty()) {
-            builder.setMessage("Nenhuma despesa encontrada para esta categoria.")
+            builder.setMessage("Nenhuma despesa encontrada.")
         } else {
             val corpoTexto = StringBuilder()
-            corpoTexto.append("💰 TOTAL ACUMULADO: €${String.format("%.2f", total)}\n")
+            corpoTexto.append("💰 TOTAL: €${String.format("%.2f", total)}\n")
             corpoTexto.append("━━━━━━━━━━━━━━━━━━━━\n\n")
 
             lista.forEach { despesa ->
-                // Tenta formatar a data que está salva como String/Timestamp
                 val mesFormatado = try {
                     sdfMes.format(Date(despesa.data.toLong()))
                 } catch (e: Exception) {
                     despesa.data
                 }
 
-                corpoTexto.append("📅 Mês: $mesFormatado\n")
+                corpoTexto.append("📅 Data: $mesFormatado\n")
+                corpoTexto.append("📝 Categoria: ${despesa.tipo}\n")
                 corpoTexto.append("📝 Descrição: ${despesa.descricao}\n")
                 corpoTexto.append("💶 Valor: €${String.format("%.2f", despesa.valor)}\n")
-                corpoTexto.append("💳 Modo: ${despesa.modoPagamento}\n")
-                corpoTexto.append("📌 Status: ${despesa.statusPagamento}\n")
                 corpoTexto.append("────────────────────\n")
             }
             builder.setMessage(corpoTexto.toString())

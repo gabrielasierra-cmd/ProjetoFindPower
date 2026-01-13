@@ -1,19 +1,22 @@
 package com.example.projetofindpower.model
 
-class DespesaDao {
+import androidx.room.*
 
-    private val despesas = mutableListOf<Despesa>()
+@Dao
+interface DespesaDao {
 
-    suspend fun getByUser(userId: String): List<Despesa> {
-        // Simulação: filtra por id do usuário
-        return despesas.filter { it.idUtilizador == userId }
-    }
+    @Query("SELECT * FROM despesas WHERE idUtilizador = :userId")
+    suspend fun getByUser(userId: String): List<Despesa>
 
-    suspend fun insert(despesa: Despesa) {
-        despesas.add(despesa)
-    }
+    @Query("SELECT * FROM despesas WHERE idUtilizador = :userId AND tipo = :categoria")
+    suspend fun getByUserAndCategory(userId: String, categoria: String): List<Despesa>
 
-    suspend fun delete(despesa: Despesa) {
-        despesas.remove(despesa)
-    }
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(despesa: Despesa)
+
+    @Delete
+    suspend fun delete(despesa: Despesa)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(despesas: List<Despesa>)
 }

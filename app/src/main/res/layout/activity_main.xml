@@ -9,7 +9,6 @@
     android:background="#FFFDF6"
     tools:context=".MainActivity">
 
-    <!-- BOTÃO DE LOGOUT (Canto superior direito) -->
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="wrap_content"
@@ -23,7 +22,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Título -->
     <TextView
         android:id="@+id/titulo"
         android:layout_width="wrap_content"
@@ -37,19 +35,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"/>
 
-    <!-- Logo -->
     <ImageView
         android:id="@+id/logo"
         android:layout_width="160dp"
         android:layout_height="160dp"
         android:src="@drawable/logo"
-        android:contentDescription="Logo FinPower"
         app:layout_constraintTop_toBottomOf="@id/titulo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
-    <!-- Frase de impacto -->
     <TextView
         android:id="@+id/frase"
         android:layout_width="wrap_content"
@@ -62,7 +57,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
 
-    <!-- BOTÃO NOVA DESPESA (Destaque Principal) -->
     <Button
         android:id="@+id/btnNovaDespesa"
         android:layout_width="0dp"
@@ -71,13 +65,10 @@
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#004D40"
         android:text="Nova Despesa +"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frase" />
 
-    <!-- Botão Digitalizar -->
     <Button
         android:id="@+id/btnDigitalizar"
         android:layout_width="0dp"
@@ -91,7 +82,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnNovaDespesa" />
 
-    <!-- Botão Categorias -->
     <Button
         android:id="@+id/btnCategorias"
         android:layout_width="0dp"
@@ -105,7 +95,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnDigitalizar" />
 
-    <!-- Compose container -->
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/composeContainer"
         android:layout_width="match_parent"
@@ -114,7 +103,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Botão Relatórios -->
     <Button
         android:id="@+id/btnRelatorios"
         android:layout_width="0dp"
@@ -128,7 +116,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/composeContainer" />
 
-    <!-- Botão Partilhar -->
     <Button
         android:id="@+id/btnPartilhar"
         android:layout_width="0dp"
