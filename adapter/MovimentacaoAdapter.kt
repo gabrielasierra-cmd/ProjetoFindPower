@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projetofindpower.R
@@ -14,8 +13,7 @@ import java.util.*
 
 class MovimentacaoAdapter(
     private var lista: List<Movimentacao>,
-    private val onEditClick: (Movimentacao) -> Unit, // Clique no botão editar
-    private val onDeleteClick: (Movimentacao) -> Unit // Clique no botão excluir
+    private val onItemClick: (Movimentacao) -> Unit // Novo: Callback de clique
 ) : RecyclerView.Adapter<MovimentacaoAdapter.MovimentacaoViewHolder>() {
 
     class MovimentacaoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,8 +21,6 @@ class MovimentacaoAdapter(
         val txtValor: TextView = view.findViewById(R.id.txtValor)
         val txtCategoria: TextView = view.findViewById(R.id.txtCategoria)
         val txtData: TextView = view.findViewById(R.id.txtData)
-        val btnEdit: ImageView = view.findViewById(R.id.btnEditarStatus)
-        val btnDelete: ImageView = view.findViewById(R.id.btnExcluirItem)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovimentacaoViewHolder {
@@ -34,9 +30,8 @@ class MovimentacaoAdapter(
 
     override fun onBindViewHolder(holder: MovimentacaoViewHolder, position: Int) {
         val mov = lista[position]
-        
         holder.txtDescricao.text = mov.descricao
-        holder.txtCategoria.text = "${mov.tipo} (${mov.statusPagamento})"
+        holder.txtCategoria.text = "${mov.tipo} (${mov.statusPagamento})" // Mostra o status ao lado da categoria
 
         if (mov.natureza == "Receita") {
             holder.txtValor.text = "+ € ${String.format("%.2f", mov.valor)}"
@@ -47,12 +42,11 @@ class MovimentacaoAdapter(
         }
 
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val dataStr = try { sdf.format(Date(mov.data.toLong())) } catch (e: Exception) { mov.data }
-        holder.txtData.text = dataStr
+        val dataFormatada = try { sdf.format(Date(mov.data.toLong())) } catch (e: Exception) { mov.data }
+        holder.txtData.text = dataFormatada
 
-        // Ações dos botões
-        holder.btnEdit.setOnClickListener { onEditClick(mov) }
-        holder.btnDelete.setOnClickListener { onDeleteClick(mov) }
+        // Configura o clique no item
+        holder.itemView.setOnClickListener { onItemClick(mov) }
     }
 
     override fun getItemCount() = lista.size

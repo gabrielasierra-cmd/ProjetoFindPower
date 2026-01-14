@@ -1,18 +1,20 @@
 package com.example.projetofindpower
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projetofindpower.adapter.MovimentacaoAdapter
-import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.MovimentacaoRepository
+import com.example.projetofindpower.controller.MovimentacaoController
+import com.example.projetofindpower.model.Movimentacao
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
@@ -22,10 +24,7 @@ import javax.inject.Inject
 class HistoricoAnualActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var authRepository: AuthRepository
-
-    @Inject
-    lateinit var movimentacaoRepository: MovimentacaoRepository
+    lateinit var controller: MovimentacaoController // Injetando o Controller
 
     private lateinit var spinnerAno: Spinner
     private lateinit var btnFiltrar: Button
@@ -37,16 +36,23 @@ class HistoricoAnualActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_historico_anual)
 
-        spinnerAno = findViewById(R.id.spinnerAno)
-        btnFiltrar = findViewById(R.id.btnFiltrar)
-        txtTotalAno = findViewById(R.id.txtTotalAno)
-        recyclerMovimentacoes = findViewById(R.id.recyclerDespesas)
-
+        inicializarUI()
         configurarSpinnerAno()
         configurarRecycler()
 
         btnFiltrar.setOnClickListener { executarFiltro() }
-        executarFiltro()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        executarFiltro() // Atualiza a lista ao voltar da edição
+    }
+
+    private fun inicializarUI() {
+        spinnerAno = findViewById(R.id.spinnerAno)
+        btnFiltrar = findViewById(R.id.btnFiltrar)
+        txtTotalAno = findViewById(R.id.txtTotalAno)
+        recyclerMovimentacoes = findViewById(R.id.recyclerDespesas)
     }
 
     private fun configurarSpinnerAno() {
@@ -59,35 +65,53 @@ class HistoricoAnualActivity : AppCompatActivity() {
     }
 
     private fun configurarRecycler() {
-        adapter = MovimentacaoAdapter(emptyList())
+        adapter = MovimentacaoAdapter(
+            lista = emptyList(),
+            onEditClick = { mov -> 
+                val intent = Intent(this, NovaMovimentacaoActivity::class.java)
+                intent.putExtra("MOVIMENTACAO", mov)
+                startActivity(intent)
+            },
+            onDeleteClick = { mov -> confirmarExclusao(mov) }
+        )
         recyclerMovimentacoes.layoutManager = LinearLayoutManager(this)
         recyclerMovimentacoes.adapter = adapter
     }
 
+    private fun confirmarExclusao(mov: Movimentacao) {
+        AlertDialog.Builder(this)
+            .setTitle("Excluir")
+            .setMessage("Deseja realmente excluir '${mov.descricao}'?")
+            .setPositiveButton("Sim, Excluir") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        controller.excluir(mov)
+                        Toast.makeText(this@HistoricoAnualActivity, "Removido!", Toast.LENGTH_SHORT).show()
+                        executarFiltro()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@HistoricoAnualActivity, "Erro ao excluir", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
     private fun executarFiltro() {
-        val userId = authRepository.getCurrentUser()?.uid ?: return
         val anoSelecionado = spinnerAno.selectedItem.toString().toInt()
 
         lifecycleScope.launch {
             try {
-                val todas = movimentacaoRepository.getMovimentacoesByUser(userId)
-                val filtradas = todas.filter { mov ->
-                    val cal = Calendar.getInstance()
-                    try {
-                        cal.timeInMillis = mov.data.toLong()
-                        cal.get(Calendar.YEAR) == anoSelecionado
-                    } catch (e: Exception) { false }
-                }
-
-                adapter.atualizarLista(filtradas)
+                // O Controller agora faz todo o trabalho de buscar e filtrar por ano
+                val listaAnual = controller.buscarPorAno(anoSelecionado)
+                adapter.atualizarLista(listaAnual)
                 
-                val receitasTotal = filtradas.filter { it.natureza == "Receita" }.sumOf { it.valor }
-                val despesasTotal = filtradas.filter { it.natureza == "Despesa" }.sumOf { it.valor }
-                val saldoAnual = receitasTotal - despesasTotal
-
-                txtTotalAno.text = "Saldo Anual: € ${String.format("%.2f", saldoAnual)}"
+                // Usamos o Controller para o cálculo do resumo
+                val (_, _, saldo) = controller.calcularResumo(listaAnual)
+                txtTotalAno.text = "Saldo Anual: € ${String.format("%.2f", saldo)}"
+                
             } catch (e: Exception) {
-                Toast.makeText(this@HistoricoAnualActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@HistoricoAnualActivity, "Erro ao carregar dados", Toast.LENGTH_SHORT).show()
             }
         }
     }

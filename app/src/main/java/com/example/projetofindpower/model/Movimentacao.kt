@@ -2,6 +2,7 @@ package com.example.projetofindpower.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(tableName = "movimentacoes")
 data class Movimentacao(
@@ -15,8 +16,7 @@ data class Movimentacao(
     val descricao: String = "",
     val modoPagamento: String = "",
     val statusPagamento: String = ""
-)
-{
+) : Serializable { // Adicionado Serializable para permitir passar via Intent
     companion object {
         val LISTA_CATEGORIAS_DESPESA = arrayOf("Lazer", "Emergência", "Contas Fixas", "Poupança", "Extras", "Viagens")
         val LISTA_CATEGORIAS_RECEITA = arrayOf("Salário", "Investimento", "Presente", "Venda", "Outros")

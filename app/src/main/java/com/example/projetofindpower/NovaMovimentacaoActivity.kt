@@ -7,9 +7,9 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.projetofindpower.controller.MovimentacaoController
 import com.example.projetofindpower.model.Movimentacao
 import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.MovimentacaoRepository
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,9 +24,10 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var movimentacaoRepository: MovimentacaoRepository
+    lateinit var controller: MovimentacaoController // Usando o Controller
 
     private var naturezaSelecionada = "Despesa"
+    private var movimentacaoParaEditar: Movimentacao? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +45,17 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
         autoCompleteStatus.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_STATUS))
         autoCompleteModo.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_MODOS))
 
+        intent.getSerializableExtra("MOVIMENTACAO")?.let {
+            movimentacaoParaEditar = it as Movimentacao
+            naturezaSelecionada = movimentacaoParaEditar!!.natureza
+            preencherCampos(editValor, editDescricao, autoCompleteCategoria, autoCompleteStatus, autoCompleteModo, toggleGroup)
+            btnSalvar.text = "Atualizar"
+        }
+
         toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 naturezaSelecionada = if (checkedId == R.id.btnSeletorReceita) "Receita" else "Despesa"
                 configurarCategorias()
-                autoCompleteCategoria.setText("")
             }
         }
 
@@ -58,7 +65,7 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
 
             if (valorText.isNotEmpty() && uid != null) {
                 val mov = Movimentacao(
-                    idMovimentacao = UUID.randomUUID().toString(),
+                    idMovimentacao = movimentacaoParaEditar?.idMovimentacao ?: UUID.randomUUID().toString(),
                     idUtilizador = uid,
                     valor = valorText.toDouble(),
                     tipo = autoCompleteCategoria.text.toString(),
@@ -66,19 +73,36 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
                     descricao = editDescricao.text.toString(),
                     statusPagamento = autoCompleteStatus.text.toString(),
                     modoPagamento = autoCompleteModo.text.toString(),
-                    data = System.currentTimeMillis().toString()
+                    data = movimentacaoParaEditar?.data ?: System.currentTimeMillis().toString()
                 )
 
                 lifecycleScope.launch {
                     try {
-                        movimentacaoRepository.saveMovimentacao(mov)
-                        Toast.makeText(this@NovaMovimentacaoActivity, "${mov.natureza} salva!", Toast.LENGTH_SHORT).show()
+                        if (movimentacaoParaEditar != null) {
+                            controller.atualizar(mov)
+                            Toast.makeText(this@NovaMovimentacaoActivity, "Atualizado!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            controller.salvar(mov)
+                            Toast.makeText(this@NovaMovimentacaoActivity, "Salvo com sucesso!", Toast.LENGTH_SHORT).show()
+                        }
                         finish()
                     } catch (e: Exception) {
                         Toast.makeText(this@NovaMovimentacaoActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
+        }
+    }
+
+    private fun preencherCampos(v: TextInputEditText, d: TextInputEditText, c: AutoCompleteTextView, s: AutoCompleteTextView, m: AutoCompleteTextView, t: MaterialButtonToggleGroup) {
+        movimentacaoParaEditar?.let { mov ->
+            v.setText(mov.valor.toString())
+            d.setText(mov.descricao)
+            c.setText(mov.tipo, false)
+            s.setText(mov.statusPagamento, false)
+            m.setText(mov.modoPagamento, false)
+            if (mov.natureza == "Receita") t.check(R.id.btnSeletorReceita) else t.check(R.id.btnSeletorDespesa)
+            configurarCategorias()
         }
     }
 

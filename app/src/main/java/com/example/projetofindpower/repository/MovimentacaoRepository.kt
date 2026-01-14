@@ -23,14 +23,23 @@ class MovimentacaoRepository @Inject constructor(
             .await()
     }
 
-    // Função para EDITAR (serve para Despesa ou Receita)
     suspend fun updateMovimentacao(mov: Movimentacao) {
-        movimentacaoDao.insert(mov) // O Room usa o mesmo 'insert' com OnConflictStrategy.REPLACE
+        movimentacaoDao.insert(mov)
         firebaseDatabase.child("users")
             .child(mov.idUtilizador)
             .child("movimentacoes")
             .child(mov.idMovimentacao)
             .setValue(mov)
+            .await()
+    }
+
+    suspend fun deleteMovimentacao(mov: Movimentacao) {
+        movimentacaoDao.delete(mov)
+        firebaseDatabase.child("users")
+            .child(mov.idUtilizador)
+            .child("movimentacoes")
+            .child(mov.idMovimentacao)
+            .removeValue()
             .await()
     }
 
@@ -53,13 +62,11 @@ class MovimentacaoRepository @Inject constructor(
         }
     }
 
-    // Função para buscar apenas DESPESAS
     suspend fun getDespesas(userId: String): List<Movimentacao> {
         val todas = getMovimentacoesByUser(userId)
         return todas.filter { it.natureza == "Despesa" }
     }
 
-    // Função para buscar apenas RECEITAS
     suspend fun getReceitas(userId: String): List<Movimentacao> {
         val todas = getMovimentacoesByUser(userId)
         return todas.filter { it.natureza == "Receita" }
