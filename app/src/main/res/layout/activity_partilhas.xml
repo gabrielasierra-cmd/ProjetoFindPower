@@ -1,63 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center_horizontal"
+    android:padding="16dp"
     android:background="#F5F5F5">
 
-    <!-- Título -->
+    <!-- Título Principal -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Partilhar Dados"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="#222"
-        android:paddingBottom="32dp" />
-
-    <!-- Card -->
-    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@android:color/white"
-        android:padding="24dp"
-        android:elevation="6dp"
-        android:layout_marginBottom="32dp"
-        android:gravity="center_horizontal"
-        android:layout_margin="8dp">
+        android:text="Gestão de Partilhas"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="#222"
+        android:paddingBottom="16dp"
+        android:gravity="center" />
 
-        <!-- Ícone -->
-        <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@android:drawable/ic_menu_share"
-            android:padding="8dp"
-            android:layout_marginBottom="16dp" />
+    <!-- Card de Ação Rápida -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        android:layout_marginBottom="16dp">
 
-        <!-- Texto explicativo -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Partilhe os seus dados financeiros de forma rápida e segura."
-            android:textSize="16sp"
-            android:textColor="#555"
-            android:gravity="center"
-            android:paddingBottom="16dp" />
-
-        <!-- Botão -->
-        <Button
-            android:id="@+id/btnPartilharAgora"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Partilhar Agora"
-            android:backgroundTint="#4CAF50"
-            android:textColor="@android:color/white"
-            android:padding="12dp" />
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:gravity="center">
 
-    </LinearLayout>
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@android:drawable/ic_menu_share"
+                app:tint="#4CAF50"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnPartilharAgora"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nova Partilha / Convite"
+                android:backgroundTint="#4CAF50"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Resumo de Dívidas -->
+    <TextView
+        android:id="@+id/txtTotalPartilhado"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total em Aberto: € 0.00"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#D32F2F"
+        android:padding="12dp"
+        android:background="@android:color/white"
+        android:layout_marginBottom="8dp"
+        android:gravity="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Histórico de Dívidas / Partilhas"
+        android:textSize="14sp"
+        android:textColor="#666"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp" />
+
+    <!-- Lista de Dívidas (RecyclerView que estava faltando) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerPartilhas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
 
 </LinearLayout>

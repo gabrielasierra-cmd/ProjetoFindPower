@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Movimentacao::class], version = 2) // Incrementei a versão para evitar conflitos de tabela
+@Database(entities = [Movimentacao::class], version = 3) // Incrementei para v3 para aplicar a nova estrutura com partilhadoCom
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun movimentacaoDao(): MovimentacaoDao

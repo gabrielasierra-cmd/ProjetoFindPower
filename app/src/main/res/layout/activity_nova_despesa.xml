@@ -135,6 +135,23 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- NOVO: 6. Campo Partilhar Com (Opcional) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPartilha"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Partilhar com (opcional)"
+            app:layout_constraintTop_toBottomOf="@id/layoutModoPagamento">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editPartilha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Botão Salvar -->
         <Button
             android:id="@+id/btnSalvarDespesa"
@@ -146,7 +163,7 @@
             android:text="Salvar"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/layoutModoPagamento" />
+            app:layout_constraintTop_toBottomOf="@id/layoutPartilha" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

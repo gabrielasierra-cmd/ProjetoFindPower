@@ -1,6 +1,7 @@
 package com.example.projetofindpower
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -12,6 +13,7 @@ import com.example.projetofindpower.model.Movimentacao
 import com.example.projetofindpower.repository.AuthRepository
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -24,7 +26,7 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var controller: MovimentacaoController // Usando o Controller
+    lateinit var controller: MovimentacaoController
 
     private var naturezaSelecionada = "Despesa"
     private var movimentacaoParaEditar: Movimentacao? = null
@@ -36,26 +38,36 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
         val toggleGroup = findViewById<MaterialButtonToggleGroup>(R.id.toggleGroup)
         val editValor = findViewById<TextInputEditText>(R.id.editValor)
         val editDescricao = findViewById<TextInputEditText>(R.id.editDescricao)
+        val editPartilha = findViewById<TextInputEditText>(R.id.editPartilha)
+        val layoutPartilha = findViewById<TextInputLayout>(R.id.layoutPartilha) // Referência ao Layout
         val autoCompleteCategoria = findViewById<AutoCompleteTextView>(R.id.autoCompleteCategoria)
         val autoCompleteStatus = findViewById<AutoCompleteTextView>(R.id.autoCompleteStatus)
         val autoCompleteModo = findViewById<AutoCompleteTextView>(R.id.autoCompleteModo)
         val btnSalvar = findViewById<Button>(R.id.btnSalvarDespesa)
 
         configurarCategorias()
+        
         autoCompleteStatus.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_STATUS))
         autoCompleteModo.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_MODOS))
 
         intent.getSerializableExtra("MOVIMENTACAO")?.let {
             movimentacaoParaEditar = it as Movimentacao
             naturezaSelecionada = movimentacaoParaEditar!!.natureza
-            preencherCampos(editValor, editDescricao, autoCompleteCategoria, autoCompleteStatus, autoCompleteModo, toggleGroup)
+            preencherCampos(editValor, editDescricao, editPartilha, autoCompleteCategoria, autoCompleteStatus, autoCompleteModo, toggleGroup)
             btnSalvar.text = "Atualizar"
+            
+            // Ajusta visibilidade inicial ao editar
+            layoutPartilha.visibility = if (naturezaSelecionada == "Despesa") View.VISIBLE else View.GONE
         }
 
         toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 naturezaSelecionada = if (checkedId == R.id.btnSeletorReceita) "Receita" else "Despesa"
                 configurarCategorias()
+                
+                // ESCONDER/MOSTRAR CAMPO DE PARTILHA
+                layoutPartilha.visibility = if (naturezaSelecionada == "Despesa") View.VISIBLE else View.GONE
+                if (naturezaSelecionada == "Receita") editPartilha.text?.clear() // Limpa se mudar para receita
             }
         }
 
@@ -73,6 +85,7 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
                     descricao = editDescricao.text.toString(),
                     statusPagamento = autoCompleteStatus.text.toString(),
                     modoPagamento = autoCompleteModo.text.toString(),
+                    partilhadoCom = if (naturezaSelecionada == "Despesa") editPartilha.text.toString() else "",
                     data = movimentacaoParaEditar?.data ?: System.currentTimeMillis().toString()
                 )
 
@@ -94,10 +107,11 @@ class NovaMovimentacaoActivity : AppCompatActivity() {
         }
     }
 
-    private fun preencherCampos(v: TextInputEditText, d: TextInputEditText, c: AutoCompleteTextView, s: AutoCompleteTextView, m: AutoCompleteTextView, t: MaterialButtonToggleGroup) {
+    private fun preencherCampos(v: TextInputEditText, d: TextInputEditText, p: TextInputEditText, c: AutoCompleteTextView, s: AutoCompleteTextView, m: AutoCompleteTextView, t: MaterialButtonToggleGroup) {
         movimentacaoParaEditar?.let { mov ->
             v.setText(mov.valor.toString())
             d.setText(mov.descricao)
+            p.setText(mov.partilhadoCom)
             c.setText(mov.tipo, false)
             s.setText(mov.statusPagamento, false)
             m.setText(mov.modoPagamento, false)
