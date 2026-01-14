@@ -6,9 +6,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.projetofindpower.model.Despesa
+import com.example.projetofindpower.model.Movimentacao
 import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.DespesaRepository
+import com.example.projetofindpower.repository.MovimentacaoRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -22,7 +22,7 @@ class CategoriasActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var expenseRepository: DespesaRepository
+    lateinit var movimentacaoRepository: MovimentacaoRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,12 +32,15 @@ class CategoriasActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+        // Categorias de Despesa
         findViewById<LinearLayout>(R.id.btnLazer).setOnClickListener { buscarEFiltar("Lazer") }
         findViewById<LinearLayout>(R.id.btnEmergencia).setOnClickListener { buscarEFiltar("Emergência") }
         findViewById<LinearLayout>(R.id.btnContasFixas).setOnClickListener { buscarEFiltar("Contas Fixas") }
         findViewById<LinearLayout>(R.id.btnPoupanca).setOnClickListener { buscarEFiltar("Poupança") }
         findViewById<LinearLayout>(R.id.btnExtras).setOnClickListener { buscarEFiltar("Extras") }
         findViewById<LinearLayout>(R.id.btnViagens).setOnClickListener { buscarEFiltar("Viagens") }
+        
+        // Botão Geral
         findViewById<LinearLayout>(R.id.btnTodasDespesas).setOnClickListener { buscarTodas() }
     }
 
@@ -49,8 +52,8 @@ class CategoriasActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val listaDespesas = expenseRepository.getExpensesByUser(userId)
-                exibirPopupDetalhado("Todas as Despesas", listaDespesas)
+                val lista = movimentacaoRepository.getMovimentacoesByUser(userId)
+                exibirPopupDetalhado("Todas as Movimentações", lista)
             } catch (e: Exception) {
                 Toast.makeText(this@CategoriasActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -62,8 +65,7 @@ class CategoriasActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // REFACTOR: Chamando o filtro direto do repositório
-                val filtradas = expenseRepository.getExpensesByCategory(userId, categoria)
+                val filtradas = movimentacaoRepository.getMovimentacoesByCategory(userId, categoria)
                 exibirPopupDetalhado(categoria, filtradas)
             } catch (e: Exception) {
                 Toast.makeText(this@CategoriasActivity, "Erro ao carregar: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -71,31 +73,36 @@ class CategoriasActivity : AppCompatActivity() {
         }
     }
 
-    private fun exibirPopupDetalhado(titulo: String, lista: List<Despesa>) {
-        val total = lista.sumOf { it.valor }
-        val sdfMes = SimpleDateFormat("MMMM / yyyy", Locale("pt", "PT"))
+    private fun exibirPopupDetalhado(titulo: String, lista: List<Movimentacao>) {
+        // Calcula o saldo das movimentações exibidas
+        val receitas = lista.filter { it.natureza == "Receita" }.sumOf { it.valor }
+        val despesas = lista.filter { it.natureza == "Despesa" }.sumOf { it.valor }
+        val saldo = receitas - despesas
+
+        val sdfMes = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "PT"))
 
         val builder = AlertDialog.Builder(this)
         builder.setTitle(titulo)
 
         if (lista.isEmpty()) {
-            builder.setMessage("Nenhuma despesa encontrada.")
+            builder.setMessage("Nenhuma movimentação encontrada.")
         } else {
             val corpoTexto = StringBuilder()
-            corpoTexto.append("💰 TOTAL: €${String.format("%.2f", total)}\n")
+            corpoTexto.append("📊 RESUMO: €${String.format("%.2f", saldo)}\n")
             corpoTexto.append("━━━━━━━━━━━━━━━━━━━━\n\n")
 
-            lista.forEach { despesa ->
-                val mesFormatado = try {
-                    sdfMes.format(Date(despesa.data.toLong()))
+            lista.forEach { mov ->
+                val dataFormatada = try {
+                    sdfMes.format(Date(mov.data.toLong()))
                 } catch (e: Exception) {
-                    despesa.data
+                    mov.data
                 }
 
-                corpoTexto.append("📅 Data: $mesFormatado\n")
-                corpoTexto.append("📝 Categoria: ${despesa.tipo}\n")
-                corpoTexto.append("📝 Descrição: ${despesa.descricao}\n")
-                corpoTexto.append("💶 Valor: €${String.format("%.2f", despesa.valor)}\n")
+                val prefixo = if (mov.natureza == "Receita") "🟢 +" else "🔴 -"
+                
+                corpoTexto.append("$prefixo €${String.format("%.2f", mov.valor)}\n")
+                corpoTexto.append("📅 Data: $dataFormatada\n")
+                corpoTexto.append("📝 Descrição: ${mov.descricao}\n")
                 corpoTexto.append("────────────────────\n")
             }
             builder.setMessage(corpoTexto.toString())

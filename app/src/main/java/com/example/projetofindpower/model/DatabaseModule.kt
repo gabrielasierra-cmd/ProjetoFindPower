@@ -3,7 +3,7 @@ package com.example.projetofindpower.di
 import android.content.Context
 import androidx.room.Room
 import com.example.projetofindpower.model.AppDatabase
-import com.example.projetofindpower.model.DespesaDao
+import com.example.projetofindpower.model.MovimentacaoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,15 +18,11 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "findpower_db"
-        ).build()
+        return AppDatabase.getInstance(context) // Usando o método getInstance que já criamos
     }
 
     @Provides
-    fun provideDespesaDao(database: AppDatabase): DespesaDao {
-        return database.despesaDao() // Esta função deve existir no seu AppDatabase
+    fun provideMovimentacaoDao(database: AppDatabase): MovimentacaoDao {
+        return database.movimentacaoDao()
     }
 }

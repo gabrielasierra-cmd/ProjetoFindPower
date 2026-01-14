@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".FinPowerApplication"
@@ -44,7 +45,7 @@
         <activity android:name=".RelatoriosActivity" android:exported="false" />
         <activity android:name=".CategoriasActivity" android:exported="false" />
         <activity android:name=".DigitalizarActivity" android:exported="false" />
-        <activity android:name=".NovaDespesaActivity" android:exported="false" />
+        <activity android:name=".NovaMovimentacaoActivity" android:exported="false" />
         <activity android:name=".HistoricoMensalActivity" android:exported="false" />
         <activity android:name=".HistoricoAnualActivity" android:exported="false" />
     </application>

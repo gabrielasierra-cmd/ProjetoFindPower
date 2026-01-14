@@ -16,12 +16,39 @@
             android:id="@+id/txtTitulo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Nova Despesa"
+            android:text="Nova Movimentação"
             android:textColor="#004D40"
             android:textSize="24sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Seletor Tipo: Despesa ou Receita -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggleGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:checkedButton="@+id/btnSeletorDespesa"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txtTitulo"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSeletorDespesa"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Despesa" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSeletorReceita"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Receita" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <!-- 1. Campo Valor -->
         <com.google.android.material.textfield.TextInputLayout
@@ -29,9 +56,9 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             android:hint="Valor (ex: 50.00)"
-            app:layout_constraintTop_toBottomOf="@id/txtTitulo">
+            app:layout_constraintTop_toBottomOf="@id/toggleGroup">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editValor"
@@ -47,7 +74,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Descrição (ex: Jantar com amigos)"
+            android:hint="Descrição"
             app:layout_constraintTop_toBottomOf="@id/layoutValor">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -81,7 +108,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Status de Pagamento"
+            android:hint="Status"
             app:layout_constraintTop_toBottomOf="@id/layoutCategoria">
 
             <AutoCompleteTextView
@@ -98,7 +125,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Modo de Pagamento"
+            android:hint="Modo"
             app:layout_constraintTop_toBottomOf="@id/layoutStatus">
 
             <AutoCompleteTextView
@@ -108,7 +135,7 @@
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Botão Salvar (Abaixo de todos) -->
+        <!-- Botão Salvar -->
         <Button
             android:id="@+id/btnSalvarDespesa"
             android:layout_width="match_parent"

@@ -17,9 +17,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.projetofindpower.network.ApiService
-import com.example.projetofindpower.network.DespesaExport
+import com.example.projetofindpower.network.MovimentacaoExport
 import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.DespesaRepository
+import com.example.projetofindpower.repository.MovimentacaoRepository
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -38,7 +38,7 @@ class RelatoriosActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var expenseRepository: DespesaRepository
+    lateinit var movimentacaoRepository: MovimentacaoRepository
 
     @Inject
     lateinit var apiService: ApiService
@@ -46,8 +46,6 @@ class RelatoriosActivity : AppCompatActivity() {
     private lateinit var pieChart: PieChart
     
     private val GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi7RGRXgwtoo8d-6XJN7uYBnrIwWrVPbDoozPPt4-urcr-sphtLfZUr1HKqcw6liDP/exec"
-    
-    // URL PÚBLICA DA PLANILHA
     private val SPREADSHEET_VIEW_URL = "https://docs.google.com/spreadsheets/d/1mPO7zvq7dxvK3xTMVb2oDpSEDiZijMqfC6J8EbhFtiY/edit?usp=sharing"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,58 +69,111 @@ class RelatoriosActivity : AppCompatActivity() {
         atualizarGrafico()
 
         btnGerarRelatorio.setOnClickListener { atualizarGrafico() }
-        btnAbrirHistoricoMensal.setOnClickListener { startActivity(Intent(this, HistoricoMensalActivity::class.java)) }
-        btnAbrirHistoricoAnual.setOnClickListener { startActivity(Intent(this, HistoricoAnualActivity::class.java)) }
         
+        btnAbrirHistoricoMensal.setOnClickListener { 
+            startActivity(Intent(this, HistoricoMensalActivity::class.java)) 
+        }
+        
+        btnAbrirHistoricoAnual.setOnClickListener { 
+            startActivity(Intent(this, HistoricoAnualActivity::class.java)) 
+        }
+
         btnExportarPlanilha.setOnClickListener { 
             btnExportarPlanilha.isEnabled = false
             exportarParaPlanilha(btnExportarPlanilha) 
         }
     }
 
-    private fun exportarParaPlanilha(button: Button) {
-        val userId = authRepository.getCurrentUser()?.uid ?: run {
-            button.isEnabled = true
-            return
-        }
-
+    private fun atualizarGrafico() {
+        val currentUser = authRepository.getCurrentUser() ?: return
         lifecycleScope.launch {
             try {
-                Log.d("PLANILHA", "Buscando despesas...")
-                val despesas = expenseRepository.getExpensesByUser(userId)
+                val lista = movimentacaoRepository.getMovimentacoesByUser(currentUser.uid)
+                if (lista.isEmpty()) {
+                    pieChart.setNoDataText("Sem dados")
+                    pieChart.invalidate()
+                    return@launch
+                }
+
+                val receitasTotal = lista.filter { it.natureza == "Receita" }.sumOf { it.valor }
+                val despesasTotal = lista.filter { it.natureza == "Despesa" }.sumOf { it.valor }
+                val saldo = receitasTotal - despesasTotal
+
+                val entries = lista.filter { it.natureza == "Despesa" }
+                    .groupBy { it.tipo }
+                    .mapValues { it.value.sumOf { d -> d.valor }.toFloat() }
+                    .map { PieEntry(it.value, it.key) }
+
+                val dataSet = PieDataSet(entries, "")
+                dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
                 
-                if (despesas.isEmpty()) {
-                    Toast.makeText(this@RelatoriosActivity, "Sem dados para exportar", Toast.LENGTH_SHORT).show()
+                pieChart.data = PieData(dataSet)
+                val corSaldo = if (saldo >= 0) "#004D40" else "#D32F2F"
+                pieChart.centerText = "Receitas: €${String.format("%.2f", receitasTotal)}\n" +
+                                     "Despesas: €${String.format("%.2f", despesasTotal)}\n" +
+                                     "Saldo: €${String.format("%.2f", saldo)}"
+                pieChart.setCenterTextColor(Color.parseColor(corSaldo))
+                pieChart.invalidate()
+            } catch (e: Exception) {
+                Log.e("RELATORIO", "Erro: ${e.message}")
+            }
+        }
+    }
+
+    private fun exportarParaPlanilha(button: Button) {
+        val userId = authRepository.getCurrentUser()?.uid ?: return
+        lifecycleScope.launch {
+            try {
+                val movimentacoes = movimentacaoRepository.getMovimentacoesByUser(userId)
+                if (movimentacoes.isEmpty()) {
+                    Toast.makeText(this@RelatoriosActivity, "Sem dados", Toast.LENGTH_SHORT).show()
                     button.isEnabled = true
                     return@launch
                 }
 
+                val totalReceitas = movimentacoes.filter { it.natureza == "Receita" }.sumOf { it.valor }
+                val totalDespesas = movimentacoes.filter { it.natureza == "Despesa" }.sumOf { it.valor }
+                val saldoGeral = totalReceitas - totalDespesas
+
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                val dadosFormatados = despesas.map { despesa ->
-                    val dataFormatada = try {
-                        sdf.format(Date(despesa.data.toLong()))
-                    } catch (e: Exception) { despesa.data }
+                
+                val dadosParaExportar = movimentacoes.map { mov ->
+                    val prefixo = if (mov.natureza == "Receita") "+" else "-"
+                    val valorFormatado = "$prefixo ${String.format("%.2f", mov.valor)}".replace(".", ",")
 
-                    DespesaExport(
-                        data = dataFormatada,
-                        categoria = despesa.tipo,
-                        descricao = despesa.descricao,
-                        valor = String.format("%.2f", despesa.valor).replace(".", ","),
-                        modo = despesa.modoPagamento,
-                        status = despesa.statusPagamento
+                    MovimentacaoExport(
+                        data = try { sdf.format(Date(mov.data.toLong())) } catch (e: Exception) { mov.data },
+                        categoria = mov.tipo,
+                        descricao = mov.descricao,
+                        valor = valorFormatado,
+                        modo = mov.modoPagamento,
+                        status = mov.statusPagamento,
+                        tipo = mov.natureza
                     )
-                }
+                }.toMutableList()
 
-                Log.d("PLANILHA", "Enviando para o Google...")
-                val response = apiService.enviarParaPlanilha(GOOGLE_SHEETS_SCRIPT_URL, dadosFormatados)
+                // Linha de Saldo
+                dadosParaExportar.add(
+                    MovimentacaoExport(
+                        data = "---",
+                        categoria = "---",
+                        descricao = "SALDO ATUAL",
+                        valor = "€ ${String.format("%.2f", saldoGeral)}".replace(".", ","),
+                        modo = "---",
+                        status = "---",
+                        tipo = if (saldoGeral >= 0) "POSITIVO" else "NEGATIVO"
+                    )
+                )
+
+                val response = apiService.enviarParaPlanilha(GOOGLE_SHEETS_SCRIPT_URL, dadosParaExportar)
 
                 if (response.isSuccessful) {
                     runOnUiThread {
                         val builder = AlertDialog.Builder(this@RelatoriosActivity)
                         builder.setTitle("Sucesso!")
-                        builder.setMessage("Dados enviados. O que deseja fazer?")
+                        builder.setMessage("Relatório exportado com sucesso.\n\nCaso a planilha não abra automaticamente, deseja copiar o link?")
                         
-                        builder.setPositiveButton("Abrir no Navegador") { _, _ ->
+                        builder.setPositiveButton("Abrir") { _, _ ->
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SPREADSHEET_VIEW_URL))
                             startActivity(intent)
                         }
@@ -135,37 +186,16 @@ class RelatoriosActivity : AppCompatActivity() {
                         }
                         
                         builder.setNegativeButton("Fechar", null)
+                        
                         builder.show()
                     }
-                } else {
-                    Toast.makeText(this@RelatoriosActivity, "Erro no servidor: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e("PLANILHA", "Erro: ${e.message}")
+                Toast.makeText(this@RelatoriosActivity, "Erro ao exportar: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 button.isEnabled = true
             }
-        }
-    }
-
-    private fun atualizarGrafico() {
-        val currentUser = authRepository.getCurrentUser() ?: return
-        lifecycleScope.launch {
-            try {
-                val listaDespesas = expenseRepository.getExpensesByUser(currentUser.uid)
-                if (listaDespesas.isEmpty()) return@launch
-
-                val entries = listaDespesas.groupBy { it.tipo }
-                    .mapValues { it.value.sumOf { d -> d.valor }.toFloat() }
-                    .map { PieEntry(it.value, it.key) }
-
-                val dataSet = PieDataSet(entries, "")
-                dataSet.colors = ColorTemplate.MATERIAL_COLORS.toList()
-                
-                pieChart.data = PieData(dataSet)
-                pieChart.centerText = "Total\n€ ${String.format("%.2f", listaDespesas.sumOf { it.valor })}"
-                pieChart.invalidate()
-            } catch (e: Exception) { }
         }
     }
 }

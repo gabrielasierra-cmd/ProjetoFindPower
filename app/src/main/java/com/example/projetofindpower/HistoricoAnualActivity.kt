@@ -10,9 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projetofindpower.adapter.DespesaAdapter
+import com.example.projetofindpower.adapter.MovimentacaoAdapter
 import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.DespesaRepository
+import com.example.projetofindpower.repository.MovimentacaoRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
@@ -25,13 +25,13 @@ class HistoricoAnualActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var expenseRepository: DespesaRepository
+    lateinit var movimentacaoRepository: MovimentacaoRepository
 
     private lateinit var spinnerAno: Spinner
     private lateinit var btnFiltrar: Button
     private lateinit var txtTotalAno: TextView
-    private lateinit var recyclerDespesas: RecyclerView
-    private lateinit var adapter: DespesaAdapter
+    private lateinit var recyclerMovimentacoes: RecyclerView
+    private lateinit var adapter: MovimentacaoAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,7 @@ class HistoricoAnualActivity : AppCompatActivity() {
         spinnerAno = findViewById(R.id.spinnerAno)
         btnFiltrar = findViewById(R.id.btnFiltrar)
         txtTotalAno = findViewById(R.id.txtTotalAno)
-        recyclerDespesas = findViewById(R.id.recyclerDespesas)
+        recyclerMovimentacoes = findViewById(R.id.recyclerDespesas)
 
         configurarSpinnerAno()
         configurarRecycler()
@@ -59,9 +59,9 @@ class HistoricoAnualActivity : AppCompatActivity() {
     }
 
     private fun configurarRecycler() {
-        adapter = DespesaAdapter(emptyList())
-        recyclerDespesas.layoutManager = LinearLayoutManager(this)
-        recyclerDespesas.adapter = adapter
+        adapter = MovimentacaoAdapter(emptyList())
+        recyclerMovimentacoes.layoutManager = LinearLayoutManager(this)
+        recyclerMovimentacoes.adapter = adapter
     }
 
     private fun executarFiltro() {
@@ -70,19 +70,22 @@ class HistoricoAnualActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Buscamos todas e filtramos por ano no repositório (vou usar uma lógica similar ao mês)
-                val todas = expenseRepository.getExpensesByUser(userId)
-                val filtradas = todas.filter { despesa ->
+                val todas = movimentacaoRepository.getMovimentacoesByUser(userId)
+                val filtradas = todas.filter { mov ->
                     val cal = Calendar.getInstance()
                     try {
-                        cal.timeInMillis = despesa.data.toLong()
+                        cal.timeInMillis = mov.data.toLong()
                         cal.get(Calendar.YEAR) == anoSelecionado
                     } catch (e: Exception) { false }
                 }
 
                 adapter.atualizarLista(filtradas)
-                val total = filtradas.sumOf { it.valor }
-                txtTotalAno.text = "Total no ano: € ${String.format("%.2f", total)}"
+                
+                val receitasTotal = filtradas.filter { it.natureza == "Receita" }.sumOf { it.valor }
+                val despesasTotal = filtradas.filter { it.natureza == "Despesa" }.sumOf { it.valor }
+                val saldoAnual = receitasTotal - despesasTotal
+
+                txtTotalAno.text = "Saldo Anual: € ${String.format("%.2f", saldoAnual)}"
             } catch (e: Exception) {
                 Toast.makeText(this@HistoricoAnualActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
             }

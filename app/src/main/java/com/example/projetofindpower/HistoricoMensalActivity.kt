@@ -10,9 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projetofindpower.adapter.DespesaAdapter
+import com.example.projetofindpower.adapter.MovimentacaoAdapter
 import com.example.projetofindpower.repository.AuthRepository
-import com.example.projetofindpower.repository.DespesaRepository
+import com.example.projetofindpower.repository.MovimentacaoRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
@@ -25,14 +25,14 @@ class HistoricoMensalActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var expenseRepository: DespesaRepository
+    lateinit var movimentacaoRepository: MovimentacaoRepository
 
     private lateinit var spinnerMes: Spinner
     private lateinit var spinnerAno: Spinner
     private lateinit var btnFiltrar: Button
     private lateinit var txtTotalMes: TextView
-    private lateinit var recyclerDespesas: RecyclerView
-    private lateinit var adapter: DespesaAdapter
+    private lateinit var recyclerMovimentacoes: RecyclerView
+    private lateinit var adapter: MovimentacaoAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,11 +42,7 @@ class HistoricoMensalActivity : AppCompatActivity() {
         configurarSpinners()
         configurarRecycler()
 
-        btnFiltrar.setOnClickListener {
-            executarFiltro()
-        }
-
-        // Carrega o mês atual por padrão
+        btnFiltrar.setOnClickListener { executarFiltro() }
         executarFiltro()
     }
 
@@ -55,61 +51,53 @@ class HistoricoMensalActivity : AppCompatActivity() {
         spinnerAno = findViewById(R.id.spinnerAno)
         btnFiltrar = findViewById(R.id.btnFiltrar)
         txtTotalMes = findViewById(R.id.txtTotalMes)
-        recyclerDespesas = findViewById(R.id.recyclerDespesas)
+        recyclerMovimentacoes = findViewById(R.id.recyclerDespesas) // Mantendo o ID por conveniência
     }
 
     private fun configurarSpinners() {
-        // Configura meses
-        val meses = arrayOf(
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-        )
+        val meses = arrayOf("Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro")
         val adapterMes = ArrayAdapter(this, android.R.layout.simple_spinner_item, meses)
         adapterMes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerMes.adapter = adapterMes
 
-        // Configura anos (ex: últimos 5 anos e próximos 2)
         val anoAtual = Calendar.getInstance().get(Calendar.YEAR)
         val anos = (anoAtual - 5..anoAtual + 2).toList().map { it.toString() }
         val adapterAno = ArrayAdapter(this, android.R.layout.simple_spinner_item, anos)
         adapterAno.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerAno.adapter = adapterAno
 
-        // Seleciona mês atual por padrão
-        val mesAtual = Calendar.getInstance().get(Calendar.MONTH)
-        spinnerMes.setSelection(mesAtual)
-        spinnerAno.setSelection(5) // O ano atual na nossa lista gerada
+        spinnerMes.setSelection(Calendar.getInstance().get(Calendar.MONTH))
+        spinnerAno.setSelection(5)
     }
 
     private fun configurarRecycler() {
-        adapter = DespesaAdapter(emptyList())
-        recyclerDespesas.layoutManager = LinearLayoutManager(this)
-        recyclerDespesas.adapter = adapter
+        adapter = MovimentacaoAdapter(emptyList())
+        recyclerMovimentacoes.layoutManager = LinearLayoutManager(this)
+        recyclerMovimentacoes.adapter = adapter
     }
 
     private fun executarFiltro() {
-        val userId = authRepository.getCurrentUser()?.uid ?: run {
-            Toast.makeText(this, "Erro: Usuário não logado", Toast.LENGTH_SHORT).show()
-            return
-        }
+        val userId = authRepository.getCurrentUser()?.uid ?: return
 
         val mesSelecionado = spinnerMes.selectedItemPosition + 1
         val anoSelecionado = spinnerAno.selectedItem.toString().toInt()
 
         lifecycleScope.launch {
             try {
-                val despesasFiltradas = expenseRepository.getExpensesByMonth(userId, mesSelecionado, anoSelecionado)
+                val lista = movimentacaoRepository.getMovimentacoesByMonth(userId, mesSelecionado, anoSelecionado)
+                adapter.atualizarLista(lista)
+
+                val receitasTotal = lista.filter { it.natureza == "Receita" }.sumOf { it.valor }
+                val despesasTotal = lista.filter { it.natureza == "Despesa" }.sumOf { it.valor }
+                val saldo = receitasTotal - despesasTotal
+
+                txtTotalMes.text = "Saldo no mês: € ${String.format("%.2f", saldo)}"
                 
-                adapter.atualizarLista(despesasFiltradas)
-
-                val total = despesasFiltradas.sumOf { it.valor }
-                txtTotalMes.text = "Total no mês: € ${String.format("%.2f", total)}"
-
-                if (despesasFiltradas.isEmpty()) {
-                    Toast.makeText(this@HistoricoMensalActivity, "Nenhuma despesa para este período", Toast.LENGTH_SHORT).show()
+                if (lista.isEmpty()) {
+                    Toast.makeText(this@HistoricoMensalActivity, "Nenhuma movimentação para este período", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@HistoricoMensalActivity, "Erro ao filtrar: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@HistoricoMensalActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

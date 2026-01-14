@@ -1,6 +1,6 @@
 package com.example.projetofindpower.network
 
-data class DespesaExport(
+data class MovimentacaoExport(
     val data: String,
     val categoria: String,
     val descricao: String,

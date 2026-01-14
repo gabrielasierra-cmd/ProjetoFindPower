@@ -32,15 +32,18 @@ class MainActivity : AppCompatActivity() {
 
         fetchUserData()
 
-        val btnNovaDespesa = findViewById<Button>(R.id.btnNovaDespesa)
+        // O ID do botão no XML ainda é btnNovaDespesa, mas vamos mudar o rótulo visual
+        val btnNovaMovimentacao = findViewById<Button>(R.id.btnNovaDespesa)
         val btnDigitalizar = findViewById<Button>(R.id.btnDigitalizar)
         val btnCategorias = findViewById<Button>(R.id.btnCategorias)
         val btnRelatorios = findViewById<Button>(R.id.btnRelatorios)
         val btnPartilhar = findViewById<Button>(R.id.btnPartilhar)
         val btnLogout = findViewById<Button>(R.id.btnLogout)
 
-        btnNovaDespesa.setOnClickListener {
-            startActivity(Intent(this, NovaDespesaActivity::class.java))
+        btnNovaMovimentacao.text = "Nova Movimentação" // Muda o texto via código para garantir
+
+        btnNovaMovimentacao.setOnClickListener {
+            startActivity(Intent(this, NovaMovimentacaoActivity::class.java))
         }
 
         btnDigitalizar.setOnClickListener {

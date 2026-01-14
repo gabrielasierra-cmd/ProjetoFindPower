@@ -5,10 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Despesa::class], version = 1)
+@Database(entities = [Movimentacao::class], version = 2) // Incrementei a versão para evitar conflitos de tabela
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun despesaDao(): DespesaDao
+    abstract fun movimentacaoDao(): MovimentacaoDao
 
     companion object {
         @Volatile
