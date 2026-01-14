@@ -24,7 +24,7 @@ import javax.inject.Inject
 class HistoricoAnualActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var controller: MovimentacaoController // Injetando o Controller
+    lateinit var controller: MovimentacaoController
 
     private lateinit var spinnerAno: Spinner
     private lateinit var btnFiltrar: Button
@@ -45,7 +45,7 @@ class HistoricoAnualActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        executarFiltro() // Atualiza a lista ao voltar da edição
+        executarFiltro()
     }
 
     private fun inicializarUI() {
@@ -80,16 +80,16 @@ class HistoricoAnualActivity : AppCompatActivity() {
 
     private fun confirmarExclusao(mov: Movimentacao) {
         AlertDialog.Builder(this)
-            .setTitle("Excluir")
-            .setMessage("Deseja realmente excluir '${mov.descricao}'?")
-            .setPositiveButton("Sim, Excluir") { _, _ ->
+            .setTitle("Eliminar")
+            .setMessage("Deseja realmente eliminar '${mov.descricao}'?")
+            .setPositiveButton("Sim") { _, _ ->
                 lifecycleScope.launch {
                     try {
-                        controller.excluir(mov)
+                        controller.eliminar(mov)
                         Toast.makeText(this@HistoricoAnualActivity, "Removido!", Toast.LENGTH_SHORT).show()
                         executarFiltro()
                     } catch (e: Exception) {
-                        Toast.makeText(this@HistoricoAnualActivity, "Erro ao excluir", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@HistoricoAnualActivity, "Erro ao eliminar", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -99,17 +99,12 @@ class HistoricoAnualActivity : AppCompatActivity() {
 
     private fun executarFiltro() {
         val anoSelecionado = spinnerAno.selectedItem.toString().toInt()
-
         lifecycleScope.launch {
             try {
-                // O Controller agora faz todo o trabalho de buscar e filtrar por ano
                 val listaAnual = controller.buscarPorAno(anoSelecionado)
                 adapter.atualizarLista(listaAnual)
-                
-                // Usamos o Controller para o cálculo do resumo
                 val (_, _, saldo) = controller.calcularResumo(listaAnual)
                 txtTotalAno.text = "Saldo Anual: € ${String.format("%.2f", saldo)}"
-                
             } catch (e: Exception) {
                 Toast.makeText(this@HistoricoAnualActivity, "Erro ao carregar dados", Toast.LENGTH_SHORT).show()
             }

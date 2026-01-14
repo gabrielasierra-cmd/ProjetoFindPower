@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.projetofindpower.controller.MovimentacaoController
+import com.example.projetofindpower.model.TipoMovimentacao
 import com.example.projetofindpower.network.ApiService
 import com.example.projetofindpower.network.MovimentacaoExport
 import com.github.mikephil.charting.charts.PieChart
@@ -33,7 +34,7 @@ import javax.inject.Inject
 class RelatoriosActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var controller: MovimentacaoController // Usando o Controller
+    lateinit var controller: MovimentacaoController
 
     @Inject
     lateinit var apiService: ApiService
@@ -50,6 +51,10 @@ class RelatoriosActivity : AppCompatActivity() {
 
         configurarEdgeToEdge()
         inicializarUI()
+    }
+
+    override fun onResume() {
+        super.onResume()
         atualizarGrafico()
     }
 
@@ -63,98 +68,79 @@ class RelatoriosActivity : AppCompatActivity() {
 
     private fun inicializarUI() {
         pieChart = findViewById(R.id.pieChart)
+        
         findViewById<Button>(R.id.btnGerarRelatorio).setOnClickListener { atualizarGrafico() }
-        findViewById<Button>(R.id.btnAbrirHistoricoMensal).setOnClickListener { 
-            startActivity(Intent(this, HistoricoMensalActivity::class.java)) 
-        }
-        findViewById<Button>(R.id.btnAbrirHistoricoAnual).setOnClickListener { 
-            startActivity(Intent(this, HistoricoAnualActivity::class.java)) 
-        }
+        
         findViewById<Button>(R.id.btnExportarPlanilha).setOnClickListener { btn ->
             btn.isEnabled = false
             exportarParaPlanilha(btn as Button) 
+        }
+
+        findViewById<Button>(R.id.btnAbrirHistoricoMensal).setOnClickListener {
+            startActivity(Intent(this, HistoricoMensalActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnAbrirHistoricoAnual).setOnClickListener {
+            startActivity(Intent(this, HistoricoAnualActivity::class.java))
         }
     }
 
     private fun atualizarGrafico() {
         lifecycleScope.launch {
             try {
-                // O Controller já nos entrega apenas os dados do mês atual filtrados
-                val listaMes = controller.buscarDadosMesAtual()
-                
-                if (listaMes.isEmpty()) {
-                    exibirGraficoVazio()
+                val todas = controller.buscarTodas()
+                if (todas.isEmpty()) {
+                    exibirGraficoVazio("Nenhuma movimentação salva")
                     return@launch
                 }
 
-                // Usamos o Controller para calcular o resumo financeiro
-                val (receitasTotal, despesasTotal, saldo) = controller.calcularResumo(listaMes)
+                val (receitasTotal, despesasTotal, saldo) = controller.calcularResumo(todas)
 
-                // Montamos as fatias do gráfico por categoria (apenas despesas)
-                val entries = listaMes.filter { it.natureza == "Despesa" }
-                    .groupBy { it.tipo }
-                    .mapValues { it.value.sumOf { d -> d.valor }.toFloat() }
-                    .filter { it.value > 0 }
-                    .map { PieEntry(it.value, it.key) }
+                val entries = mutableListOf<PieEntry>()
+                if (receitasTotal > 0) entries.add(PieEntry(receitasTotal.toFloat(), "Receitas"))
+                if (despesasTotal > 0) entries.add(PieEntry(despesasTotal.toFloat(), "Despesas"))
 
                 if (entries.isEmpty()) {
-                    exibirGraficoVazio("Nenhuma despesa neste mês")
+                    exibirGraficoVazio("Dados com valor zero")
                     return@launch
                 }
 
                 configurarVisualGrafico(entries, receitasTotal, despesasTotal, saldo)
 
             } catch (e: Exception) {
-                Log.e("RELATORIO", "Erro: ${e.message}")
+                Log.e("RELATORIO", "Erro ao atualizar: ${e.message}")
+                exibirGraficoVazio("Erro ao carregar dados")
             }
         }
     }
 
     private fun configurarVisualGrafico(entries: List<PieEntry>, receitas: Double, despesas: Double, saldo: Double) {
-        val dataSet = PieDataSet(entries, "")
-        dataSet.colors = listOf(
-            Color.parseColor("#1A237E"), Color.parseColor("#2E7D32"), 
-            Color.parseColor("#E65100"), Color.parseColor("#4A148C"),
-            Color.parseColor("#006064"), Color.parseColor("#BF360C")
-        )
-        dataSet.sliceSpace = 4f
+        val dataSet = PieDataSet(entries, "Resumo Financeiro")
+        dataSet.colors = listOf(Color.parseColor("#4CAF50"), Color.parseColor("#F44336"))
+        dataSet.sliceSpace = 5f
         dataSet.valueTextColor = Color.WHITE
-        dataSet.valueTextSize = 13f
+        dataSet.valueTextSize = 16f
 
         pieChart.data = PieData(dataSet)
         pieChart.description.isEnabled = false
-        pieChart.isDrawHoleEnabled = true
-        pieChart.setHoleColor(Color.WHITE)
-        pieChart.animateXY(800, 800)
+        pieChart.setUsePercentValues(true)
+        pieChart.animateY(1000)
 
-        val mesNome = obterNomeMesAtual()
         val corSaldo = if (saldo >= 0) "#1B5E20" else "#B71C1C"
-        
-        pieChart.centerText = "RESUMO $mesNome\n\n" +
-                             "Receitas: €${String.format("%.2f", receitas)}\n" +
-                             "Despesas: €${String.format("%.2f", despesas)}\n" +
-                             "Saldo: €${String.format("%.2f", saldo)}"
-        
+        pieChart.centerText = "BALANÇO\n\nReceitas: €${String.format("%.2f", receitas)}\nDespesas: €${String.format("%.2f", despesas)}\nSaldo: €${String.format("%.2f", saldo)}"
         pieChart.setCenterTextColor(Color.parseColor(corSaldo))
-        pieChart.setCenterTextSize(14f)
         pieChart.invalidate()
     }
 
-    private fun exibirGraficoVazio(msg: String = "Sem dados para este mês") {
+    private fun exibirGraficoVazio(msg: String) {
         pieChart.setNoDataText(msg)
         pieChart.clear()
         pieChart.invalidate()
     }
 
-    private fun obterNomeMesAtual(): String {
-        val cal = Calendar.getInstance()
-        return arrayOf("JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO")[cal.get(Calendar.MONTH)]
-    }
-
     private fun exportarParaPlanilha(button: Button) {
         lifecycleScope.launch {
             try {
-                // Buscamos todas via Controller
                 val movimentacoes = controller.buscarTodas()
                 if (movimentacoes.isEmpty()) {
                     Toast.makeText(this@RelatoriosActivity, "Sem dados", Toast.LENGTH_SHORT).show()
@@ -162,31 +148,23 @@ class RelatoriosActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val (totalReceitas, totalDespesas, saldoGeral) = controller.calcularResumo(movimentacoes)
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                
                 val dadosParaExportar = movimentacoes.map { mov ->
-                    val prefixo = if (mov.natureza == "Receita") "+" else "-"
-                    val valorFormatado = "$prefixo ${String.format("%.2f", mov.valor)}".replace(".", ",")
-
+                    val prefixo = if (mov.tipo == TipoMovimentacao.RECEITA) "+" else "-"
                     MovimentacaoExport(
                         data = try { sdf.format(Date(mov.data.toLong())) } catch (e: Exception) { mov.data },
-                        categoria = mov.tipo,
+                        categoria = mov.categoria.name,
                         descricao = mov.descricao,
-                        valor = valorFormatado,
+                        valor = "$prefixo €${String.format("%.2f", mov.valor)}",
                         modo = mov.modoPagamento,
-                        status = mov.statusPagamento,
-                        tipo = mov.natureza
+                        status = mov.statusPagamento.name,
+                        tipo = mov.tipo.name
                     )
                 }.toMutableList()
 
-                dadosParaExportar.add(MovimentacaoExport("---", "---", "SALDO TOTAL", "€ ${String.format("%.2f", saldoGeral)}".replace(".", ","), "---", "---", "TOTAL"))
-
                 val response = apiService.enviarParaPlanilha(GOOGLE_SHEETS_SCRIPT_URL, dadosParaExportar)
+                if (response.isSuccessful) mostrarPopupSucesso()
 
-                if (response.isSuccessful) {
-                    mostrarPopupSucesso()
-                }
             } catch (e: Exception) {
                 Toast.makeText(this@RelatoriosActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
@@ -198,9 +176,20 @@ class RelatoriosActivity : AppCompatActivity() {
     private fun mostrarPopupSucesso() {
         AlertDialog.Builder(this)
             .setTitle("Sucesso!")
-            .setMessage("Relatório exportado para o Google Sheets.")
+            .setMessage("Relatório exportado para o Google Sheets.\nSe não conseguir abrir a planilha, utilize o botão abaixo para copiar o link.")
             .setPositiveButton("Abrir Planilha") { _, _ ->
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SPREADSHEET_VIEW_URL)))
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SPREADSHEET_VIEW_URL))
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(this, "Não foi possível abrir o navegador. Copie o link.", Toast.LENGTH_LONG).show()
+                }
+            }
+            .setNeutralButton("Copiar Link") { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("Link Planilha", SPREADSHEET_VIEW_URL)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, "Link copiado para a área de transferência!", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Fechar", null)
             .show()

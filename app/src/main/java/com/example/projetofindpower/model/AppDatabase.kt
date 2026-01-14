@@ -1,31 +1,24 @@
 package com.example.projetofindpower.model
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
-@Database(entities = [Movimentacao::class], version = 3) // Incrementei para v3 para aplicar a nova estrutura com partilhadoCom
+@Database(
+    entities = [
+        User::class,
+        Movimentacao::class,
+        Recomendacao::class,
+        Participante::class,
+        DespesaParticipante::class
+    ],
+    version = 2,
+    exportSchema = false
+)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun movimentacaoDao(): MovimentacaoDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-
-        fun getInstance(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "findpower_database"
-                )
-                    .fallbackToDestructiveMigration()
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
+    abstract fun userDao(): UserDao
+    abstract fun recomendacaoDao(): RecomendacaoDao
+    abstract fun participanteDao(): ParticipanteDao
 }

@@ -1,7 +1,7 @@
 package com.example.projetofindpower.repository
 
-import com.example.projetofindpower.model.Movimentacao
-import com.example.projetofindpower.model.MovimentacaoDao
+import android.util.Log
+import com.example.projetofindpower.model.*
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
 import java.util.*
@@ -13,84 +13,104 @@ class MovimentacaoRepository @Inject constructor(
 
     private val firebaseDatabase = FirebaseDatabase.getInstance().reference
 
-    suspend fun saveMovimentacao(mov: Movimentacao) {
-        movimentacaoDao.insert(mov)
-        firebaseDatabase.child("users")
-            .child(mov.idUtilizador)
-            .child("movimentacoes")
-            .child(mov.idMovimentacao)
-            .setValue(mov)
-            .await()
-    }
-
-    suspend fun updateMovimentacao(mov: Movimentacao) {
-        movimentacaoDao.insert(mov)
-        firebaseDatabase.child("users")
-            .child(mov.idUtilizador)
-            .child("movimentacoes")
-            .child(mov.idMovimentacao)
-            .setValue(mov)
-            .await()
-    }
-
-    suspend fun deleteMovimentacao(mov: Movimentacao) {
-        movimentacaoDao.delete(mov)
-        firebaseDatabase.child("users")
-            .child(mov.idUtilizador)
-            .child("movimentacoes")
-            .child(mov.idMovimentacao)
-            .removeValue()
-            .await()
-    }
-
-    suspend fun getMovimentacoesByUser(userId: String): List<Movimentacao> {
-        return try {
-            val snapshot = firebaseDatabase.child("users").child(userId).child("movimentacoes").get().await()
-            val listaFirebase = mutableListOf<Movimentacao>()
-
-            snapshot.children.forEach { child ->
-                child.getValue(Movimentacao::class.java)?.let { listaFirebase.add(it) }
+    suspend fun salvarMovimentacao(mov: Movimentacao) {
+        try {
+            movimentacaoDao.inserir(mov)
+            mov.idUtilizador?.let { uid ->
+                firebaseDatabase.child("users")
+                    .child(uid)
+                    .child("movimentacoes")
+                    .child(mov.idMovimentacao)
+                    .setValue(mov)
+                    .await()
             }
-
-            if (listaFirebase.isNotEmpty()) {
-                movimentacaoDao.insertAll(listaFirebase)
-            }
-
-            movimentacaoDao.getByUser(userId)
         } catch (e: Exception) {
-            movimentacaoDao.getByUser(userId)
+            Log.e("REPO", "Erro ao salvar: ${e.message}")
         }
     }
 
-    suspend fun getDespesas(userId: String): List<Movimentacao> {
-        val todas = getMovimentacoesByUser(userId)
-        return todas.filter { it.natureza == "Despesa" }
+    suspend fun eliminarMovimentacao(mov: Movimentacao) {
+        try {
+            movimentacaoDao.eliminar(mov)
+            mov.idUtilizador?.let { uid ->
+                firebaseDatabase.child("users")
+                    .child(uid)
+                    .child("movimentacoes")
+                    .child(mov.idMovimentacao)
+                    .removeValue()
+                    .await()
+            }
+        } catch (e: Exception) {
+            Log.e("REPO", "Erro ao eliminar: ${e.message}")
+        }
     }
 
-    suspend fun getReceitas(userId: String): List<Movimentacao> {
-        val todas = getMovimentacoesByUser(userId)
-        return todas.filter { it.natureza == "Receita" }
+    suspend fun buscarTodasPorUtilizador(userId: String): List<Movimentacao> {
+        if (userId.isBlank()) return emptyList()
+
+        // 1. Tenta sincronizar Firebase -> Room primeiro
+        try {
+            val snapshot = firebaseDatabase.child("users").child(userId).child("movimentacoes").get().await()
+            snapshot.children.forEach { child ->
+                try {
+                    val map = child.value as? Map<String, Any>
+                    if (map != null) {
+                        val catStr = map["categoria"] as? String ?: "OUTROS"
+                        // Mapeamento manual preventivo para o Firebase também
+                        val catEnum = when(catStr.uppercase()) {
+                            "CONTAS", "CONTAS FIXAS", "CONTAS_FIXAS" -> Categoria.CONTAS_FIXAS
+                            "LAZER" -> Categoria.LAZER
+                            "EMERGENCIA", "EMERGÊNCIA" -> Categoria.EMERGENCIA
+                            "POUPANÇA", "POUPANCA" -> Categoria.POUPANCA
+                            "EXTRAS" -> Categoria.EXTRAS
+                            "VIAGENS" -> Categoria.VIAGENS
+                            "SALÁRIO", "SALARIO" -> Categoria.SALARIO
+                            "INVESTIMENTO" -> Categoria.INVESTIMENTO
+                            "PRESENTE" -> Categoria.PRESENTE
+                            "VENDA" -> Categoria.VENDA
+                            else -> Categoria.OUTROS
+                        }
+
+                        val mov = Movimentacao(
+                            idMovimentacao = map["idMovimentacao"] as? String ?: UUID.randomUUID().toString(),
+                            idUtilizador = userId,
+                            valor = (map["valor"] as? Number)?.toDouble() ?: 0.0,
+                            descricao = map["descricao"] as? String ?: "",
+                            tipo = try { TipoMovimentacao.valueOf(map["tipo"] as? String ?: "DESPESA") } catch (e: Exception) { TipoMovimentacao.DESPESA },
+                            categoria = catEnum,
+                            statusPagamento = try { StatusPagamento.valueOf(map["statusPagamento"] as? String ?: "PENDENTE") } catch (e: Exception) { StatusPagamento.PENDENTE },
+                            modoPagamento = map["modoPagamento"] as? String ?: "",
+                            data = map["data"] as? String ?: ""
+                        )
+                        movimentacaoDao.inserir(mov)
+                    }
+                } catch (e: Exception) { 
+                    Log.e("REPO", "Erro ao converter item Firebase: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("REPO", "Erro ao buscar Firebase: ${e.message}")
+        }
+
+        // 2. Retorna do Room (O Converters.kt agora protege contra o erro 'Contas')
+        return try {
+            movimentacaoDao.buscarPorUtilizador(userId)
+        } catch (e: Exception) {
+            Log.e("REPO", "Erro fatal no Room: ${e.message}")
+            emptyList()
+        }
     }
 
-    suspend fun getMovimentacoesByCategory(userId: String, categoria: String): List<Movimentacao> {
-        getMovimentacoesByUser(userId) 
-        return movimentacaoDao.getByUserAndCategory(userId, categoria)
-    }
-
-    suspend fun getMovimentacoesByMonth(userId: String, mes: Int, ano: Int): List<Movimentacao> {
-        val todas = getMovimentacoesByUser(userId)
+    suspend fun buscarPorMes(userId: String, mes: Int, ano: Int): List<Movimentacao> {
+        val todas = buscarTodasPorUtilizador(userId)
         val calendar = Calendar.getInstance()
-        
         return todas.filter { mov ->
             try {
-                val timestamp = mov.data.toLong()
-                calendar.timeInMillis = timestamp
+                calendar.timeInMillis = mov.data.toLong()
                 val m = calendar.get(Calendar.MONTH) + 1
                 val a = calendar.get(Calendar.YEAR)
                 m == mes && a == ano
-            } catch (e: Exception) {
-                false
-            }
+            } catch (e: Exception) { false }
         }
     }
 }

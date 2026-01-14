@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.projetofindpower.adapter.MovimentacaoAdapter
 import com.example.projetofindpower.controller.MovimentacaoController
 import com.example.projetofindpower.model.Movimentacao
+import com.example.projetofindpower.model.StatusPagamento
+import com.example.projetofindpower.model.TipoMovimentacao
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,7 +44,7 @@ class PartilhasActivity : AppCompatActivity() {
     }
 
     private fun inicializarComponentes() {
-        recyclerDividas = findViewById(R.id.recyclerPartilhas) // Certifique-se que o ID existe no XML
+        recyclerDividas = findViewById(R.id.recyclerPartilhas)
         txtTotalDividas = findViewById(R.id.txtTotalPartilhado)
     }
 
@@ -64,8 +66,8 @@ class PartilhasActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val todas = controller.buscarTodas()
-                // Dívidas são despesas pendentes ou já partilhadas
-                val dividas = todas.filter { it.statusPagamento == "Partilhado" || it.statusPagamento == "Pendente" }
+                // Dívidas são despesas pendentes
+                val dividas = todas.filter { it.statusPagamento == StatusPagamento.PENDENTE }
                 adapter.atualizarLista(dividas)
                 
                 val total = dividas.sumOf { it.valor }
@@ -78,7 +80,7 @@ class PartilhasActivity : AppCompatActivity() {
 
     private fun abrirSelecaoParaPartilha() {
         lifecycleScope.launch {
-            val todas = controller.buscarTodas().filter { it.natureza == "Despesa" }
+            val todas = controller.buscarTodas().filter { it.tipo == TipoMovimentacao.DESPESA }
             if (todas.isEmpty()) {
                 Toast.makeText(this@PartilhasActivity, "Nenhuma despesa para partilhar", Toast.LENGTH_SHORT).show()
                 return@launch
@@ -99,29 +101,26 @@ class PartilhasActivity : AppCompatActivity() {
         val textoPartilha = "Olá! Gostaria de partilhar esta despesa contigo:\n\n" +
                 "📝 Descrição: ${mov.descricao}\n" +
                 "💰 Valor: €${mov.valor}\n" +
-                "📂 Categoria: ${mov.tipo}\n\n" +
+                "📂 Categoria: ${mov.categoria}\n\n" +
                 "Enviado via FindPower App ⚡"
 
-        // Caso de Uso: Partilhar Despesa (via Intent do sistema)
-        val sendIntent: Intent = Intent().apply {
+        val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, textoPartilha)
             type = "text/plain"
         }
 
-        val shareIntent = Intent.createChooser(sendIntent, "Partilhar via")
-        startActivity(shareIntent)
+        startActivity(Intent.createChooser(sendIntent, "Partilhar via"))
 
-        // Marcar como partilhada no banco
         lifecycleScope.launch {
-            controller.atualizar(mov.copy(statusPagamento = "Partilhado"))
+            controller.salvar(mov.copy(statusPagamento = StatusPagamento.PENDENTE))
             carregarDividas()
         }
     }
 
     private fun excluirMovimentacao(mov: Movimentacao) {
         lifecycleScope.launch {
-            controller.excluir(mov)
+            controller.eliminar(mov)
             carregarDividas()
             Toast.makeText(this@PartilhasActivity, "Removido!", Toast.LENGTH_SHORT).show()
         }

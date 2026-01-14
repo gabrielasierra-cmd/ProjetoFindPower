@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projetofindpower.adapter.MovimentacaoAdapter
 import com.example.projetofindpower.controller.MovimentacaoController
+import com.example.projetofindpower.model.Categoria
 import com.example.projetofindpower.model.Movimentacao
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -21,9 +22,9 @@ import javax.inject.Inject
 class CategoriasActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var controller: MovimentacaoController // Agora chamamos o Controller!
+    lateinit var controller: MovimentacaoController
 
-    private var ultimaCategoriaSelecionada: String? = null
+    private var ultimaCategoriaSelecionada: Categoria? = null
     private var alertDialogAtual: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,16 +36,17 @@ class CategoriasActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        ultimaCategoriaSelecionada?.let { executarBusca(it) }
+        executarBusca(ultimaCategoriaSelecionada)
     }
 
     private fun setupClickListeners() {
-        findViewById<LinearLayout>(R.id.btnLazer).setOnClickListener { buscarEFiltar("Lazer") }
-        findViewById<LinearLayout>(R.id.btnEmergencia).setOnClickListener { buscarEFiltar("Emergência") }
-        findViewById<LinearLayout>(R.id.btnContasFixas).setOnClickListener { buscarEFiltar("Contas Fixas") }
-        findViewById<LinearLayout>(R.id.btnPoupanca).setOnClickListener { buscarEFiltar("Poupança") }
-        findViewById<LinearLayout>(R.id.btnExtras).setOnClickListener { buscarEFiltar("Extras") }
-        findViewById<LinearLayout>(R.id.btnViagens).setOnClickListener { buscarEFiltar("Viagens") }
+        // Agora passamos o Enum diretamente
+        findViewById<LinearLayout>(R.id.btnLazer).setOnClickListener { buscarEFiltar(Categoria.LAZER) }
+        findViewById<LinearLayout>(R.id.btnEmergencia).setOnClickListener { buscarEFiltar(Categoria.EMERGENCIA) }
+        findViewById<LinearLayout>(R.id.btnContasFixas).setOnClickListener { buscarEFiltar(Categoria.CONTAS_FIXAS) }
+        findViewById<LinearLayout>(R.id.btnPoupanca).setOnClickListener { buscarEFiltar(Categoria.POUPANCA) }
+        findViewById<LinearLayout>(R.id.btnExtras).setOnClickListener { buscarEFiltar(Categoria.EXTRAS) }
+        findViewById<LinearLayout>(R.id.btnViagens).setOnClickListener { buscarEFiltar(Categoria.VIAGENS) }
         findViewById<LinearLayout>(R.id.btnTodasDespesas).setOnClickListener { buscarTodas() }
     }
 
@@ -53,22 +55,21 @@ class CategoriasActivity : AppCompatActivity() {
         executarBusca(null)
     }
 
-    private fun buscarEFiltar(categoria: String) {
+    private fun buscarEFiltar(categoria: Categoria) {
         ultimaCategoriaSelecionada = categoria
         executarBusca(categoria)
     }
 
-    private fun executarBusca(categoria: String?) {
+    private fun executarBusca(categoria: Categoria?) {
         lifecycleScope.launch {
             try {
-                // Deixamos o Controller fazer o trabalho pesado de busca e filtro
                 val lista = if (categoria == null) {
                     controller.buscarTodas()
                 } else {
                     controller.buscarPorCategoria(categoria)
                 }
                 
-                exibirListaComIcones(categoria ?: "Todas", lista)
+                exibirListaComIcones(categoria?.name ?: "Todas", lista)
             } catch (e: Exception) {
                 Toast.makeText(this@CategoriasActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -99,13 +100,12 @@ class CategoriasActivity : AppCompatActivity() {
             onDeleteClick = { mov -> confirmarExclusao(mov) }
         )
 
-        // Usamos o Controller para calcular o resumo de forma limpa
         val (_, _, saldo) = controller.calcularResumo(lista)
 
         val builder = AlertDialog.Builder(this)
         builder.setTitle("$titulo (Saldo: €${String.format("%.2f", saldo)})")
         builder.setView(recyclerView)
-        builder.setPositiveButton("Fechar") { _, _ -> ultimaCategoriaSelecionada = null }
+        builder.setPositiveButton("Fechar") { _, _ ->  }
         
         alertDialogAtual = builder.show()
     }
@@ -113,10 +113,10 @@ class CategoriasActivity : AppCompatActivity() {
     private fun confirmarExclusao(mov: Movimentacao) {
         AlertDialog.Builder(this)
             .setTitle("Confirmar")
-            .setMessage("Deseja excluir '${mov.descricao}'?")
+            .setMessage("Deseja eliminar '${mov.descricao}'?")
             .setPositiveButton("Sim") { _, _ ->
                 lifecycleScope.launch {
-                    controller.excluir(mov)
+                    controller.eliminar(mov)
                     Toast.makeText(this@CategoriasActivity, "Removido!", Toast.LENGTH_SHORT).show()
                     executarBusca(ultimaCategoriaSelecionada)
                 }

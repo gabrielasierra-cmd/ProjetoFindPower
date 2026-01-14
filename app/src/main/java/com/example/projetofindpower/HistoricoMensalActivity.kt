@@ -85,11 +85,11 @@ class HistoricoMensalActivity : AppCompatActivity() {
 
     private fun confirmarExclusao(mov: Movimentacao) {
         AlertDialog.Builder(this)
-            .setTitle("Excluir")
-            .setMessage("Tem certeza que deseja excluir '${mov.descricao}'?")
+            .setTitle("Eliminar")
+            .setMessage("Deseja eliminar '${mov.descricao}'?")
             .setPositiveButton("Sim") { _, _ ->
                 lifecycleScope.launch {
-                    controller.excluir(mov)
+                    controller.eliminar(mov)
                     Toast.makeText(this@HistoricoMensalActivity, "Removido!", Toast.LENGTH_SHORT).show()
                     executarFiltro()
                 }

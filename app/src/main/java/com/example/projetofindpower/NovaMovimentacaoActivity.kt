@@ -2,127 +2,138 @@ package com.example.projetofindpower
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.Button
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.projetofindpower.controller.MovimentacaoController
-import com.example.projetofindpower.model.Movimentacao
-import com.example.projetofindpower.repository.AuthRepository
+import com.example.projetofindpower.model.*
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class NovaMovimentacaoActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var authRepository: AuthRepository
-
-    @Inject
     lateinit var controller: MovimentacaoController
 
-    private var naturezaSelecionada = "Despesa"
+    private lateinit var editValor: EditText
+    private lateinit var editDescricao: EditText
+    private lateinit var autoCategoria: AutoCompleteTextView
+    private lateinit var autoStatus: AutoCompleteTextView
+    private lateinit var autoModo: AutoCompleteTextView
+    private lateinit var layoutPartilha: TextInputLayout
+    private lateinit var toggleTipo: MaterialButtonToggleGroup
+    private lateinit var btnSalvar: Button
+    
+    private var tipoSelecionado = TipoMovimentacao.DESPESA
     private var movimentacaoParaEditar: Movimentacao? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nova_despesa)
 
-        val toggleGroup = findViewById<MaterialButtonToggleGroup>(R.id.toggleGroup)
-        val editValor = findViewById<TextInputEditText>(R.id.editValor)
-        val editDescricao = findViewById<TextInputEditText>(R.id.editDescricao)
-        val editPartilha = findViewById<TextInputEditText>(R.id.editPartilha)
-        val layoutPartilha = findViewById<TextInputLayout>(R.id.layoutPartilha) // Referência ao Layout
-        val autoCompleteCategoria = findViewById<AutoCompleteTextView>(R.id.autoCompleteCategoria)
-        val autoCompleteStatus = findViewById<AutoCompleteTextView>(R.id.autoCompleteStatus)
-        val autoCompleteModo = findViewById<AutoCompleteTextView>(R.id.autoCompleteModo)
-        val btnSalvar = findViewById<Button>(R.id.btnSalvarDespesa)
+        inicializarViews()
 
-        configurarCategorias()
+        movimentacaoParaEditar = intent.getSerializableExtra("MOVIMENTACAO") as? Movimentacao
+        movimentacaoParaEditar?.let { preencherDados(it) }
+
+        btnSalvar.setOnClickListener { salvar() }
         
-        autoCompleteStatus.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_STATUS))
-        autoCompleteModo.setAdapter(ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, Movimentacao.LISTA_MODOS))
-
-        intent.getSerializableExtra("MOVIMENTACAO")?.let {
-            movimentacaoParaEditar = it as Movimentacao
-            naturezaSelecionada = movimentacaoParaEditar!!.natureza
-            preencherCampos(editValor, editDescricao, editPartilha, autoCompleteCategoria, autoCompleteStatus, autoCompleteModo, toggleGroup)
-            btnSalvar.text = "Atualizar"
-            
-            // Ajusta visibilidade inicial ao editar
-            layoutPartilha.visibility = if (naturezaSelecionada == "Despesa") View.VISIBLE else View.GONE
-        }
-
-        toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+        toggleTipo.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                naturezaSelecionada = if (checkedId == R.id.btnSeletorReceita) "Receita" else "Despesa"
-                configurarCategorias()
-                
-                // ESCONDER/MOSTRAR CAMPO DE PARTILHA
-                layoutPartilha.visibility = if (naturezaSelecionada == "Despesa") View.VISIBLE else View.GONE
-                if (naturezaSelecionada == "Receita") editPartilha.text?.clear() // Limpa se mudar para receita
+                tipoSelecionado = if (checkedId == R.id.btnSeletorReceita) 
+                    TipoMovimentacao.RECEITA else TipoMovimentacao.DESPESA
+                atualizarInterfacePorTipo()
             }
         }
+        
+        configurarDropdownsIniciais()
+    }
 
-        btnSalvar.setOnClickListener {
-            val valorText = editValor.text.toString()
-            val uid = authRepository.getCurrentUser()?.uid
+    private fun inicializarViews() {
+        editValor = findViewById(R.id.editValor)
+        editDescricao = findViewById(R.id.editDescricao)
+        autoCategoria = findViewById(R.id.autoCompleteCategoria)
+        autoStatus = findViewById(R.id.autoCompleteStatus)
+        autoModo = findViewById(R.id.autoCompleteModo)
+        layoutPartilha = findViewById(R.id.layoutPartilha)
+        toggleTipo = findViewById(R.id.toggleGroup)
+        btnSalvar = findViewById(R.id.btnSalvarDespesa)
+    }
 
-            if (valorText.isNotEmpty() && uid != null) {
-                val mov = Movimentacao(
-                    idMovimentacao = movimentacaoParaEditar?.idMovimentacao ?: UUID.randomUUID().toString(),
-                    idUtilizador = uid,
-                    valor = valorText.toDouble(),
-                    tipo = autoCompleteCategoria.text.toString(),
-                    natureza = naturezaSelecionada,
-                    descricao = editDescricao.text.toString(),
-                    statusPagamento = autoCompleteStatus.text.toString(),
-                    modoPagamento = autoCompleteModo.text.toString(),
-                    partilhadoCom = if (naturezaSelecionada == "Despesa") editPartilha.text.toString() else "",
-                    data = movimentacaoParaEditar?.data ?: System.currentTimeMillis().toString()
-                )
+    private fun configurarDropdownsIniciais() {
+        atualizarInterfacePorTipo()
+        
+        val status = StatusPagamento.values().map { it.name }.toTypedArray()
+        autoStatus.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, status))
+        
+        val modos = arrayOf("Dinheiro", "Cartão", "Transferência", "MB Way")
+        autoModo.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, modos))
+    }
 
-                lifecycleScope.launch {
-                    try {
-                        if (movimentacaoParaEditar != null) {
-                            controller.atualizar(mov)
-                            Toast.makeText(this@NovaMovimentacaoActivity, "Atualizado!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            controller.salvar(mov)
-                            Toast.makeText(this@NovaMovimentacaoActivity, "Salvo com sucesso!", Toast.LENGTH_SHORT).show()
-                        }
-                        finish()
-                    } catch (e: Exception) {
-                        Toast.makeText(this@NovaMovimentacaoActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
+    private fun atualizarInterfacePorTipo() {
+        // Atualizar Categorias
+        val categorias = if (tipoSelecionado == TipoMovimentacao.RECEITA)
+            arrayOf("SALARIO", "INVESTIMENTO", "PRESENTE", "VENDA", "OUTROS")
+        else
+            arrayOf("LAZER", "EMERGENCIA", "CONTAS_FIXAS", "POUPANCA", "EXTRAS", "VIAGENS", "OUTROS")
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, categorias)
+        autoCategoria.setAdapter(adapter)
+
+        // Esconder campo de partilha se for Receita
+        if (tipoSelecionado == TipoMovimentacao.RECEITA) {
+            layoutPartilha.visibility = View.GONE
+        } else {
+            layoutPartilha.visibility = View.VISIBLE
         }
     }
 
-    private fun preencherCampos(v: TextInputEditText, d: TextInputEditText, p: TextInputEditText, c: AutoCompleteTextView, s: AutoCompleteTextView, m: AutoCompleteTextView, t: MaterialButtonToggleGroup) {
-        movimentacaoParaEditar?.let { mov ->
-            v.setText(mov.valor.toString())
-            d.setText(mov.descricao)
-            p.setText(mov.partilhadoCom)
-            c.setText(mov.tipo, false)
-            s.setText(mov.statusPagamento, false)
-            m.setText(mov.modoPagamento, false)
-            if (mov.natureza == "Receita") t.check(R.id.btnSeletorReceita) else t.check(R.id.btnSeletorDespesa)
-            configurarCategorias()
-        }
+    private fun preencherDados(mov: Movimentacao) {
+        editValor.setText(mov.valor.toString())
+        editDescricao.setText(mov.descricao)
+        autoCategoria.setText(mov.categoria.name, false)
+        autoStatus.setText(mov.statusPagamento.name, false)
+        autoModo.setText(mov.modoPagamento, false)
+        
+        tipoSelecionado = mov.tipo
+        if (tipoSelecionado == TipoMovimentacao.RECEITA) 
+            toggleTipo.check(R.id.btnSeletorReceita) 
+        else 
+            toggleTipo.check(R.id.btnSeletorDespesa)
+            
+        atualizarInterfacePorTipo()
     }
 
-    private fun configurarCategorias() {
-        val lista = if (naturezaSelecionada == "Receita") Movimentacao.LISTA_CATEGORIAS_RECEITA else Movimentacao.LISTA_CATEGORIAS_DESPESA
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, lista)
-        findViewById<AutoCompleteTextView>(R.id.autoCompleteCategoria).setAdapter(adapter)
+    private fun salvar() {
+        val valorStr = editValor.text.toString()
+        if (valorStr.isBlank()) return
+
+        lifecycleScope.launch {
+            val categoriaSelecionada = try { 
+                Categoria.valueOf(autoCategoria.text.toString()) 
+            } catch (e: Exception) { 
+                Categoria.OUTROS 
+            }
+
+            val mov = Movimentacao(
+                idMovimentacao = movimentacaoParaEditar?.idMovimentacao ?: UUID.randomUUID().toString(),
+                idUtilizador = FirebaseAuth.getInstance().currentUser?.uid,
+                valor = valorStr.toDouble(),
+                descricao = editDescricao.text.toString(),
+                tipo = tipoSelecionado,
+                categoria = categoriaSelecionada,
+                statusPagamento = try { StatusPagamento.valueOf(autoStatus.text.toString()) } catch (e: Exception) { StatusPagamento.PENDENTE },
+                modoPagamento = autoModo.text.toString(),
+                data = System.currentTimeMillis().toString()
+            )
+            controller.salvar(mov)
+            finish()
+        }
     }
 }

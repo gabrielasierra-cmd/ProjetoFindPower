@@ -3,25 +3,18 @@ package com.example.projetofindpower.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
+import java.util.UUID
 
 @Entity(tableName = "movimentacoes")
 data class Movimentacao(
     @PrimaryKey
-    val idMovimentacao: String = "",
-    val idUtilizador: String = "",
+    val idMovimentacao: String = UUID.randomUUID().toString(),
+    val idUtilizador: String? = null,
     val data: String = "",
     val valor: Double = 0.0,
-    val tipo: String = "",
-    val natureza: String = "Despesa", // "Despesa" ou "Receita"
+    val tipo: TipoMovimentacao = TipoMovimentacao.DESPESA,
+    val statusPagamento: StatusPagamento = StatusPagamento.PENDENTE,
     val descricao: String = "",
-    val modoPagamento: String = "",
-    val statusPagamento: String = "",
-    val partilhadoCom: String = "" // NOVO: Nome ou ID da pessoa com quem partilhou
-) : Serializable {
-    companion object {
-        val LISTA_CATEGORIAS_DESPESA = arrayOf("Lazer", "Emergência", "Contas Fixas", "Poupança", "Extras", "Viagens")
-        val LISTA_CATEGORIAS_RECEITA = arrayOf("Salário", "Investimento", "Presente", "Venda", "Outros")
-        val LISTA_STATUS = arrayOf("Pago", "Pendente", "Recebido", "Partilhado")
-        val LISTA_MODOS = arrayOf("Dinheiro", "Cartão", "Transferência", "MB Way")
-    }
-}
+    val categoria: Categoria = Categoria.OUTROS, // Mudado para Enum
+    val modoPagamento: String = ""
+) : Serializable

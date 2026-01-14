@@ -48,6 +48,7 @@
         <activity android:name=".NovaMovimentacaoActivity" android:exported="false" />
         <activity android:name=".HistoricoMensalActivity" android:exported="false" />
         <activity android:name=".HistoricoAnualActivity" android:exported="false" />
+        <activity android:name=".MentoriaActivity" android:exported="false" />
     </application>
 
 </manifest>

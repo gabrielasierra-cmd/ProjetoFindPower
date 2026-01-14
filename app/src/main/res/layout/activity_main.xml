@@ -37,8 +37,8 @@
 
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
         android:src="@drawable/logo"
         app:layout_constraintTop_toBottomOf="@id/titulo"
         app:layout_constraintStart_toStartOf="parent"
@@ -55,16 +55,16 @@
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/btnNovaDespesa"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#004D40"
-        android:text="Nova Despesa +"
+        android:text="Nova Movimentação +"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frase" />
@@ -73,10 +73,10 @@
         android:id="@+id/btnDigitalizar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:text="@string/p1"
+        android:text="Digitalizar Recibo"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,47 +86,54 @@
         android:id="@+id/btnCategorias"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:text="@string/p2"
+        android:text="Categorias"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnDigitalizar" />
 
-    <androidx.compose.ui.platform.ComposeView
-        android:id="@+id/composeContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/btnCategorias"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
     <Button
         android:id="@+id/btnRelatorios"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:text="@string/p3"
+        android:text="Relatórios"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/composeContainer" />
+        app:layout_constraintTop_toBottomOf="@id/btnCategorias" />
 
     <Button
         android:id="@+id/btnPartilhar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginHorizontal="32dp"
         android:backgroundTint="#E0F2F1"
-        android:text="@string/p4"
+        android:text="Partilhas"
         android:textColor="#004D40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnRelatorios" />
+
+    <!-- NOVO BOTÃO DE MENTORIA -->
+    <Button
+        android:id="@+id/btnMentoria"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="32dp"
+        android:backgroundTint="#FFD600"
+        android:text="Mentoria Financeira (IA) ✨"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnPartilhar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
