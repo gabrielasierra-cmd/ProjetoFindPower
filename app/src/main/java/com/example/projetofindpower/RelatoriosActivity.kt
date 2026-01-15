@@ -39,6 +39,7 @@ class RelatoriosActivity : AppCompatActivity() {
     @Inject
     lateinit var apiService: ApiService
 
+    private val TAG = "RELATORIO_ERRO"
     private lateinit var pieChart: PieChart
     
     private val GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi7RGRXgwtoo8d-6XJN7uYBnrIwWrVPbDoozPPt4-urcr-sphtLfZUr1HKqcw6liDP/exec"
@@ -68,18 +69,14 @@ class RelatoriosActivity : AppCompatActivity() {
 
     private fun inicializarUI() {
         pieChart = findViewById(R.id.pieChart)
-        
         findViewById<Button>(R.id.btnGerarRelatorio).setOnClickListener { atualizarGrafico() }
-        
         findViewById<Button>(R.id.btnExportarPlanilha).setOnClickListener { btn ->
             btn.isEnabled = false
             exportarParaPlanilha(btn as Button) 
         }
-
         findViewById<Button>(R.id.btnAbrirHistoricoMensal).setOnClickListener {
             startActivity(Intent(this, HistoricoMensalActivity::class.java))
         }
-
         findViewById<Button>(R.id.btnAbrirHistoricoAnual).setOnClickListener {
             startActivity(Intent(this, HistoricoAnualActivity::class.java))
         }
@@ -90,45 +87,27 @@ class RelatoriosActivity : AppCompatActivity() {
             try {
                 val todas = controller.buscarTodas()
                 if (todas.isEmpty()) {
-                    exibirGraficoVazio("Nenhuma movimentação salva")
+                    exibirGraficoVazio("Nenhuma movimentação")
                     return@launch
                 }
-
-                val (receitasTotal, despesasTotal, saldo) = controller.calcularResumo(todas)
-
+                val (receitas, despesas, saldo) = controller.calcularResumo(todas)
                 val entries = mutableListOf<PieEntry>()
-                if (receitasTotal > 0) entries.add(PieEntry(receitasTotal.toFloat(), "Receitas"))
-                if (despesasTotal > 0) entries.add(PieEntry(despesasTotal.toFloat(), "Despesas"))
-
-                if (entries.isEmpty()) {
-                    exibirGraficoVazio("Dados com valor zero")
-                    return@launch
-                }
-
-                configurarVisualGrafico(entries, receitasTotal, despesasTotal, saldo)
-
+                if (receitas > 0) entries.add(PieEntry(receitas.toFloat(), "Receitas"))
+                if (despesas > 0) entries.add(PieEntry(despesas.toFloat(), "Despesas"))
+                configurarVisualGrafico(entries, receitas, despesas, saldo)
             } catch (e: Exception) {
-                Log.e("RELATORIO", "Erro ao atualizar: ${e.message}")
-                exibirGraficoVazio("Erro ao carregar dados")
+                Log.e(TAG, "Erro ao atualizar gráfico: ${e.message}", e)
             }
         }
     }
 
     private fun configurarVisualGrafico(entries: List<PieEntry>, receitas: Double, despesas: Double, saldo: Double) {
-        val dataSet = PieDataSet(entries, "Resumo Financeiro")
+        val dataSet = PieDataSet(entries, "Resumo")
         dataSet.colors = listOf(Color.parseColor("#4CAF50"), Color.parseColor("#F44336"))
-        dataSet.sliceSpace = 5f
-        dataSet.valueTextColor = Color.WHITE
-        dataSet.valueTextSize = 16f
-
         pieChart.data = PieData(dataSet)
         pieChart.description.isEnabled = false
-        pieChart.setUsePercentValues(true)
         pieChart.animateY(1000)
-
-        val corSaldo = if (saldo >= 0) "#1B5E20" else "#B71C1C"
-        pieChart.centerText = "BALANÇO\n\nReceitas: €${String.format("%.2f", receitas)}\nDespesas: €${String.format("%.2f", despesas)}\nSaldo: €${String.format("%.2f", saldo)}"
-        pieChart.setCenterTextColor(Color.parseColor(corSaldo))
+        pieChart.centerText = "Saldo: €${String.format("%.2f", saldo)}"
         pieChart.invalidate()
     }
 
@@ -142,12 +121,6 @@ class RelatoriosActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val movimentacoes = controller.buscarTodas()
-                if (movimentacoes.isEmpty()) {
-                    Toast.makeText(this@RelatoriosActivity, "Sem dados", Toast.LENGTH_SHORT).show()
-                    button.isEnabled = true
-                    return@launch
-                }
-
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 val dadosParaExportar = movimentacoes.map { mov ->
                     val prefixo = if (mov.tipo == TipoMovimentacao.RECEITA) "+" else "-"
@@ -163,10 +136,16 @@ class RelatoriosActivity : AppCompatActivity() {
                 }.toMutableList()
 
                 val response = apiService.enviarParaPlanilha(GOOGLE_SHEETS_SCRIPT_URL, dadosParaExportar)
-                if (response.isSuccessful) mostrarPopupSucesso()
-
+                if (response.isSuccessful) {
+                    mostrarPopupSucesso()
+                } else {
+                    // LOGCAT: Erro ao exportar para o Google Sheets
+                    Log.e(TAG, "Erro ao exportar: ${response.code()} | ${response.errorBody()?.string()}")
+                    Toast.makeText(this@RelatoriosActivity, "Erro ao exportar planilha", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
-                Toast.makeText(this@RelatoriosActivity, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "Exceção na exportação: ${e.message}", e)
+                Toast.makeText(this@RelatoriosActivity, "Erro de ligação", Toast.LENGTH_SHORT).show()
             } finally {
                 button.isEnabled = true
             }
@@ -176,20 +155,18 @@ class RelatoriosActivity : AppCompatActivity() {
     private fun mostrarPopupSucesso() {
         AlertDialog.Builder(this)
             .setTitle("Sucesso!")
-            .setMessage("Relatório exportado para o Google Sheets.\nSe não conseguir abrir a planilha, utilize o botão abaixo para copiar o link.")
-            .setPositiveButton("Abrir Planilha") { _, _ ->
+            .setMessage("Relatório exportado para o Google Sheets.")
+            .setPositiveButton("Abrir") { _, _ ->
                 try {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SPREADSHEET_VIEW_URL))
-                    startActivity(intent)
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SPREADSHEET_VIEW_URL)))
                 } catch (e: Exception) {
-                    Toast.makeText(this, "Não foi possível abrir o navegador. Copie o link.", Toast.LENGTH_LONG).show()
+                    Log.e(TAG, "Erro ao abrir link da planilha", e)
                 }
             }
             .setNeutralButton("Copiar Link") { _, _ ->
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("Link Planilha", SPREADSHEET_VIEW_URL)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "Link copiado para a área de transferência!", Toast.LENGTH_SHORT).show()
+                clipboard.setPrimaryClip(ClipData.newPlainText("Link", SPREADSHEET_VIEW_URL))
+                Toast.makeText(this, "Link copiado!", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Fechar", null)
             .show()

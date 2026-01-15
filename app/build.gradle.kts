@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,12 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     alias(libs.plugins.google.services) 
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
@@ -19,6 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("gemini.api.key") ?: ""}\"")
     }
 
     buildTypes {
@@ -40,6 +50,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        buildConfig = true
     }
 }
 
@@ -54,7 +65,6 @@ dependencies {
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // ATUALIZADO: Versão mais estável para evitar 404
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
     val room_version = "2.6.1"

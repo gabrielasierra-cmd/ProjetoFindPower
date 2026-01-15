@@ -12,6 +12,10 @@ enum class TipoRecomendacao {
     ORCAMENTO, POUPANCA, INVESTIMENTO, ALERTA
 }
 
+enum class ModoPagamento {
+    DINHEIRO, CARTAO, TRANSFERENCIA, MB_WAY, OUTRO
+}
+
 enum class EstadoConfirmacao {
     CONFIRMADO, REJEITADO, PENDENTE
 }

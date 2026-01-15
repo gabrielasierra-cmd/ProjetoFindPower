@@ -2,13 +2,14 @@ package com.example.projetofindpower
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.projetofindpower.controller.MovimentacaoController
-import com.google.ai.client.generativeai.GenerativeModel
+import com.example.projetofindpower.network.GeminiRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,10 +20,13 @@ class MentoriaActivity : AppCompatActivity() {
     @Inject
     lateinit var controller: MovimentacaoController
 
-    private val GEMINI_API_KEY = "AIzaSyAv-eT-ixL9w7qLzENXOIlW0ZOXTq-qb2A"
+    @Inject
+    lateinit var geminiRepository: GeminiRepository
 
     private lateinit var txtRespostaIA: TextView
     private lateinit var progressIA: ProgressBar
+    private lateinit var editPergunta: EditText
+    private lateinit var btnEnviar: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,40 +34,56 @@ class MentoriaActivity : AppCompatActivity() {
 
         txtRespostaIA = findViewById(R.id.txtRespostaIA)
         progressIA = findViewById(R.id.progressIA)
+        editPergunta = findViewById(R.id.editPergunta)
+        btnEnviar = findViewById(R.id.btnEnviar)
         
-        findViewById<Button>(R.id.btnFecharMentoria).setOnClickListener { finish() }
+        findViewById<android.widget.Button>(R.id.btnFecharMentoria).setOnClickListener { finish() }
 
-        gerarMentoriaPersonalizada()
+        // Enviar pergunta ao clicar no botão
+        btnEnviar.setOnClickListener {
+            val pergunta = editPergunta.text.toString()
+            if (pergunta.isNotBlank()) {
+                enviarPergunta(pergunta)
+            }
+        }
+
+        // Ao abrir, gera o conselho inicial automático
+        carregarConselhoInicial()
     }
 
-    private fun gerarMentoriaPersonalizada() {
+    private fun carregarConselhoInicial() {
         lifecycleScope.launch {
             try {
                 progressIA.visibility = View.VISIBLE
-                txtRespostaIA.text = "A contactar o teu mentor financeiro..."
-
-                val dados = controller.buscarTodas()
-                val (receitas, despesas, saldo) = controller.calcularResumo(dados)
+                val movimentacoes = controller.buscarTodas()
+                val (receitas, despesas, saldo) = controller.calcularResumo(movimentacoes)
                 
-                val prompt = """
-                    És um mentor financeiro experiente. 
-                    Resumo do utilizador: Saldo €$saldo, Receitas €$receitas, Despesas €$despesas.
-                    Dá 3 conselhos financeiros práticos e curtos em Português de Portugal.
-                """.trimIndent()
-
-                val generativeModel = GenerativeModel(
-                    modelName = "gemini-1.5-flash", 
-                    apiKey = GEMINI_API_KEY
-                )
-
-                val response = generativeModel.generateContent(prompt)
-                txtRespostaIA.text = response.text ?: "O mentor está a refletir. Tenta novamente."
-
+                val resposta = geminiRepository.gerarConselhos(receitas, despesas, saldo)
+                txtRespostaIA.text = resposta ?: "Olá! Sou seu mentor financeiro FinPower?"
             } catch (e: Exception) {
-                txtRespostaIA.text = "Erro 404 persistente.\n\n" +
-                        "Causa provável: A 'Generative Language API' ainda está a ser propagada pelo Google.\n\n" +
-                        "Ação: Aguarde 5 minutos e tente novamente sem fechar o app.\n\n" +
-                        "Detalhes: ${e.message}"
+                txtRespostaIA.text = "Erro ao carregar conselho: ${e.message}"
+            } finally {
+                progressIA.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun enviarPergunta(texto: String) {
+        lifecycleScope.launch {
+            try {
+                progressIA.visibility = View.VISIBLE
+                editPergunta.text.clear()
+                txtRespostaIA.text = "A pensar..."
+
+                val resposta = geminiRepository.perguntarIA(texto)
+                
+                if (resposta != null) {
+                    txtRespostaIA.text = resposta
+                } else {
+                    txtRespostaIA.text = "O Gemini 2.0 não conseguiu responder. Tenta novamente."
+                }
+            } catch (e: Exception) {
+                txtRespostaIA.text = "Erro: ${e.message}"
             } finally {
                 progressIA.visibility = View.GONE
             }
