@@ -19,14 +19,32 @@
         android:id="@+id/imgPreview"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:contentDescription="Câmara"
-        android:padding="16dp" />
+        android:contentDescription="Antevisão da Foto"
+        android:scaleType="centerInside"
+        android:background="#EEEEEE"
+        android:padding="4dp" />
+
+    <ProgressBar
+        android:id="@+id/progressIA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txtStatusIA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAlignment="center"
+        android:text="Escolhe uma foto do teu recibo"
+        android:textSize="16sp" />
 
     <Button
-        android:id="@+id/btnAbrirCamera"
+        android:id="@+id/btnAbrirGaleria"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Abrir Câmara"
+        android:text="Escolher da Galeria 🖼️"
         android:layout_marginTop="32dp" />
 
 </LinearLayout>

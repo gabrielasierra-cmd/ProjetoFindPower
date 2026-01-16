@@ -1,9 +1,11 @@
 package com.example.projetofindpower.network
 
+import android.graphics.Bitmap
 import android.util.Log
 import com.example.projetofindpower.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -26,9 +28,45 @@ class GeminiRepository @Inject constructor() {
         requestOptions = RequestOptions(apiVersion = "v1beta")
     )
 
-    /**
-     * Envia uma pergunta genérica para o Gemini 2.0
-     */
+    private val promptPadrao = """
+        Analisa este recibo, fatura ou documento.
+        Extrai apenas estas 3 informações separadas por ponto e vírgula (;):
+        1. Descrição curta (ex: Continente, Almoço, Gasolina)
+        2. Valor numérico (usa ponto para decimais, ex: 15.50)
+        3. Categoria (Escolha APENAS uma destas: ALIMENTACAO, TRANSPORTE, SAUDE, LAZER, EDUCACAO, OUTROS)
+        
+        Exemplo de resposta esperada: Pingo Doce;22.45;ALIMENTACAO
+        Se não encontrares os dados, responde apenas: ERRO
+    """.trimIndent()
+
+    suspend fun analisarRecibo(imagem: Bitmap): String? = withContext(Dispatchers.IO) {
+        try {
+            val inputContent = content {
+                image(imagem)
+                text(promptPadrao)
+            }
+            val response = generativeModel.generateContent(inputContent)
+            response.text
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao analisar imagem: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun analisarPDF(pdfBytes: ByteArray): String? = withContext(Dispatchers.IO) {
+        try {
+            val inputContent = content {
+                blob("application/pdf", pdfBytes)
+                text(promptPadrao)
+            }
+            val response = generativeModel.generateContent(inputContent)
+            response.text
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao analisar PDF: ${e.message}")
+            null
+        }
+    }
+
     suspend fun perguntarIA(mensagem: String): String? = withContext(Dispatchers.IO) {
         try {
             val response = generativeModel.generateContent(mensagem)
@@ -36,17 +74,6 @@ class GeminiRepository @Inject constructor() {
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao perguntar: ${e.message}")
             null
-        }
-    }
-
-    suspend fun testarChave(): String = withContext(Dispatchers.IO) {
-        if (cleanApiKey.isEmpty()) return@withContext "ERRO: Chave vazia."
-        try {
-            val response = generativeModel.generateContent("Olá Gemini 2.0!")
-            "CHAVE_OK"
-        } catch (e: Exception) {
-            Log.e(TAG, "ERRO COM 2.0: ${e.message}")
-            "ERRO: ${e.message}"
         }
     }
 

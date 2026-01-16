@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- ADICIONADO: Permissões de Câmara -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:name=".FinPowerApplication"
@@ -39,16 +43,12 @@
         <activity
             android:name=".RelatoriosActivity"
             android:exported="false" />
-        
         <activity
             android:name=".HistoricoAnualActivity"
             android:exported="false" />
-            
-        <!-- ADICIONADO: Histórico Mensal -->
         <activity
             android:name=".HistoricoMensalActivity"
             android:exported="false" />
-            
         <activity
             android:name=".PartilhasActivity"
             android:exported="false" />
