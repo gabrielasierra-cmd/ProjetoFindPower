@@ -28,7 +28,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // AJUSTE FINAL: Batendo 100% com o teu local.properties
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("gemini.api.key") ?: ""}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localProperties.getProperty("firebase.project.id") ?: "findpower-640bb"}\"")
+        buildConfigField("String", "FCM_ACCESS_TOKEN", "\"${localProperties.getProperty("fcm.access.token")?.trim() ?: ""}\"")
     }
 
     buildTypes {
@@ -61,8 +64,11 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     
-    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
-    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")

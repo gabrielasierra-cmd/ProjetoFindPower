@@ -24,6 +24,7 @@ import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.utils.ColorTemplate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -86,28 +87,56 @@ class RelatoriosActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val todas = controller.buscarTodas()
-                if (todas.isEmpty()) {
-                    exibirGraficoVazio("Nenhuma movimentação")
+                val despesas = todas.filter { it.tipo == TipoMovimentacao.DESPESA }
+
+                if (despesas.isEmpty()) {
+                    exibirGraficoVazio("Nenhuma despesa registada")
                     return@launch
                 }
-                val (receitas, despesas, saldo) = controller.calcularResumo(todas)
-                val entries = mutableListOf<PieEntry>()
-                if (receitas > 0) entries.add(PieEntry(receitas.toFloat(), "Receitas"))
-                if (despesas > 0) entries.add(PieEntry(despesas.toFloat(), "Despesas"))
-                configurarVisualGrafico(entries, receitas, despesas, saldo)
+
+                // Agrupar por categoria e somar os valores
+                val despesasPorCategoria = despesas.groupBy { it.categoria }
+                    .mapValues { entry -> entry.value.sumOf { it.valor } }
+
+                val entries = despesasPorCategoria.map { (categoria, total) ->
+                    PieEntry(total.toFloat(), categoria.name)
+                }
+
+                val totalDespesas = despesas.sumOf { it.valor }
+                configurarVisualGrafico(entries, totalDespesas)
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao atualizar gráfico: ${e.message}", e)
             }
         }
     }
 
-    private fun configurarVisualGrafico(entries: List<PieEntry>, receitas: Double, despesas: Double, saldo: Double) {
-        val dataSet = PieDataSet(entries, "Resumo")
-        dataSet.colors = listOf(Color.parseColor("#4CAF50"), Color.parseColor("#F44336"))
+    private fun configurarVisualGrafico(entries: List<PieEntry>, totalDespesas: Double) {
+        val dataSet = PieDataSet(entries, "Despesas por Categoria")
+        
+        // Usar uma paleta de cores alegre e variada
+        val colors = mutableListOf<Int>()
+        for (c in ColorTemplate.VORDIPLOM_COLORS) colors.add(c)
+        for (c in ColorTemplate.JOYFUL_COLORS) colors.add(c)
+        for (c in ColorTemplate.COLORFUL_COLORS) colors.add(c)
+        dataSet.colors = colors
+        
+        dataSet.valueTextSize = 14f
+        dataSet.valueTextColor = Color.BLACK
+
         pieChart.data = PieData(dataSet)
         pieChart.description.isEnabled = false
         pieChart.animateY(1000)
-        pieChart.centerText = "Saldo: €${String.format("%.2f", saldo)}"
+        
+        // Centralizar o total de despesas
+        pieChart.centerText = "Total Despesas:\n€${String.format("%.2f", totalDespesas)}"
+        pieChart.setCenterTextSize(16f)
+        
+        // Configurações extras de legibilidade
+        pieChart.legend.isEnabled = true
+        pieChart.legend.isWordWrapEnabled = true
+        pieChart.setEntryLabelColor(Color.BLACK)
+        
         pieChart.invalidate()
     }
 
@@ -139,7 +168,6 @@ class RelatoriosActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     mostrarPopupSucesso()
                 } else {
-                    // LOGCAT: Erro ao exportar para o Google Sheets
                     Log.e(TAG, "Erro ao exportar: ${response.code()} | ${response.errorBody()?.string()}")
                     Toast.makeText(this@RelatoriosActivity, "Erro ao exportar planilha", Toast.LENGTH_SHORT).show()
                 }
@@ -166,7 +194,7 @@ class RelatoriosActivity : AppCompatActivity() {
             .setNeutralButton("Copiar Link") { _, _ ->
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("Link", SPREADSHEET_VIEW_URL))
-                Toast.makeText(this, "Link copiado!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Link cobiado!", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Fechar", null)
             .show()

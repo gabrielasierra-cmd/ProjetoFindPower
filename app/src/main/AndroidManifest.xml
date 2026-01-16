@@ -2,14 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".FinPowerApplication"
@@ -20,35 +15,57 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ProjetoFindPower">
+        android:theme="@style/Theme.ProjetoFindPower"
+        tools:targetApi="31">
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+        <!-- Serviço do Firebase Cloud Messaging -->
+        <service
+            android:name=".services.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".NovaMovimentacaoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MentoriaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DigitalizarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RelatoriosActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".HistoricoAnualActivity"
+            android:exported="false" />
+            
+        <!-- ADICIONADO: Histórico Mensal -->
+        <activity
+            android:name=".HistoricoMensalActivity"
+            android:exported="false" />
+            
+        <activity
+            android:name=".PartilhasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CategoriasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".LoginActivity"
-            android:theme="@style/Theme.ProjetoFindPower"
-            android:exported="true">
-        </activity>
-
-        <activity android:name=".PartilhasActivity" android:exported="false" />
-        <activity android:name=".RelatoriosActivity" android:exported="false" />
-        <activity android:name=".CategoriasActivity" android:exported="false" />
-        <activity android:name=".DigitalizarActivity" android:exported="false" />
-        <activity android:name=".NovaMovimentacaoActivity" android:exported="false" />
-        <activity android:name=".HistoricoMensalActivity" android:exported="false" />
-        <activity android:name=".HistoricoAnualActivity" android:exported="false" />
-        <activity android:name=".MentoriaActivity" android:exported="false" />
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

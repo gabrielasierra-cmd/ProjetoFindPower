@@ -1,11 +1,21 @@
 package com.example.projetofindpower.controller
 
 import android.util.Log
+import com.example.projetofindpower.BuildConfig
 import com.example.projetofindpower.model.Categoria
 import com.example.projetofindpower.model.Movimentacao
 import com.example.projetofindpower.model.TipoMovimentacao
+import com.example.projetofindpower.network.*
 import com.example.projetofindpower.repository.MovimentacaoRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -13,20 +23,73 @@ class MovimentacaoController @Inject constructor(
     private val repository: MovimentacaoRepository
 ) {
 
-    suspend fun salvar(mov: Movimentacao) = repository.salvarMovimentacao(mov)
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://fcm.googleapis.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    suspend fun eliminar(mov: Movimentacao) = repository.eliminarMovimentacao(mov)
+    private val fcmService = retrofit.create(FcmApiService::class.java)
+    
+    private val ACCESS_TOKEN = BuildConfig.FCM_ACCESS_TOKEN
+
+    suspend fun salvar(mov: Movimentacao) {
+        repository.salvarMovimentacao(mov)
+        if (mov.tipo == TipoMovimentacao.DESPESA) {
+            enviarPushIndividual(mov)
+        }
+    }
+
+    private fun enviarPushIndividual(mov: Movimentacao) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // DELAY DE 5 SEGUNDOS: Dá tempo para fechar a app e ver a notificação no ecrã inicial
+                Log.d("FCM_DEBUG", "Aguardando 5 segundos antes de enviar o push...")
+                delay(5000)
+
+                val tokenRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("fcmToken")
+                val snapshot = tokenRef.get().await()
+                val userToken = snapshot.getValue(String::class.java)
+
+                if (userToken != null) {
+                    val request = FcmRequest(
+                        message = Message(
+                            token = userToken,
+                            notification = FcmNotification(
+                                title = "Despesa Registada 💸",
+                                body = "${mov.valor}€ em ${mov.descricao ?: "Geral"}"
+                            )
+                        )
+                    )
+
+                    Log.d("FCM_DEBUG", "A enviar Push com Token que começa por: ${ACCESS_TOKEN.take(10)}...")
+                    
+                    val response = fcmService.sendPushNotification("Bearer $ACCESS_TOKEN", request)
+                    
+                    if (response.isSuccessful) {
+                        Log.d("FCM_DEBUG", "Push enviado com sucesso!")
+                    } else {
+                        val erro = response.errorBody()?.string()
+                        Log.e("FCM_DEBUG", "Erro Google: ${response.code()} - $erro")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("FCM_DEBUG", "Erro: ${e.message}")
+            }
+        }
+    }
 
     suspend fun buscarTodas(): List<Movimentacao> {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        val lista = repository.buscarTodasPorUtilizador(uid)
-        Log.d("DEBUG_MOV", "Total de movimentações encontradas para o UID $uid: ${lista.size}")
-        return lista
+        return repository.buscarTodasPorUtilizador(uid)
     }
 
     suspend fun buscarPorCategoria(categoria: Categoria): List<Movimentacao> {
-        return buscarTodas().filter { it.categoria == categoria }
+        val todas = buscarTodas()
+        return todas.filter { it.categoria == categoria }
     }
+
+    suspend fun eliminar(mov: Movimentacao) = repository.eliminarMovimentacao(mov)
 
     suspend fun buscarPorAno(ano: Int): List<Movimentacao> {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""

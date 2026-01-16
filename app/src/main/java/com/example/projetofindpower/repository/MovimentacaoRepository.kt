@@ -15,17 +15,29 @@ class MovimentacaoRepository @Inject constructor(
 
     suspend fun salvarMovimentacao(mov: Movimentacao) {
         try {
+            // 1. SALVAR LOCALMENTE
             movimentacaoDao.inserir(mov)
-            mov.idUtilizador?.let { uid ->
+            Log.d("REPO_DEBUG", "1. Salvo no Room (Local)")
+
+            // 2. SALVAR NO FIREBASE
+            val uid = mov.idUtilizador
+            if (!uid.isNullOrEmpty()) {
+                Log.d("REPO_DEBUG", "2. A enviar para Firebase: users/$uid/movimentacoes/${mov.idMovimentacao}")
+                
+                // Adicionado .await() no final para garantir a conclusão
                 firebaseDatabase.child("users")
                     .child(uid)
                     .child("movimentacoes")
                     .child(mov.idMovimentacao)
                     .setValue(mov)
-                    .await()
+                    .await() 
+                
+                Log.d("REPO_DEBUG", "3. SUCESSO: Gravado no Firebase!")
+            } else {
+                Log.e("REPO_DEBUG", "2. ERRO: UID está nulo.")
             }
         } catch (e: Exception) {
-            Log.e("REPO", "Erro ao salvar: ${e.message}")
+            Log.e("REPO_DEBUG", "ERRO GERAL: ${e.message}")
         }
     }
 
@@ -33,72 +45,37 @@ class MovimentacaoRepository @Inject constructor(
         try {
             movimentacaoDao.eliminar(mov)
             mov.idUtilizador?.let { uid ->
-                firebaseDatabase.child("users")
-                    .child(uid)
-                    .child("movimentacoes")
-                    .child(mov.idMovimentacao)
-                    .removeValue()
-                    .await()
+                firebaseDatabase.child("users").child(uid).child("movimentacoes")
+                    .child(mov.idMovimentacao).removeValue().await()
             }
-        } catch (e: Exception) {
-            Log.e("REPO", "Erro ao eliminar: ${e.message}")
-        }
+        } catch (e: Exception) { Log.e("REPO", "Erro ao eliminar: ${e.message}") }
     }
 
     suspend fun buscarTodasPorUtilizador(userId: String): List<Movimentacao> {
         if (userId.isBlank()) return emptyList()
-
-        // 1. Tenta sincronizar Firebase -> Room primeiro
         try {
             val snapshot = firebaseDatabase.child("users").child(userId).child("movimentacoes").get().await()
             snapshot.children.forEach { child ->
-                try {
-                    val map = child.value as? Map<String, Any>
-                    if (map != null) {
-                        val catStr = map["categoria"] as? String ?: "OUTROS"
-                        // Mapeamento manual preventivo para o Firebase também
-                        val catEnum = when(catStr.uppercase()) {
-                            "CONTAS", "CONTAS FIXAS", "CONTAS_FIXAS" -> Categoria.CONTAS_FIXAS
-                            "LAZER" -> Categoria.LAZER
-                            "EMERGENCIA", "EMERGÊNCIA" -> Categoria.EMERGENCIA
-                            "POUPANÇA", "POUPANCA" -> Categoria.POUPANCA
-                            "EXTRAS" -> Categoria.EXTRAS
-                            "VIAGENS" -> Categoria.VIAGENS
-                            "SALÁRIO", "SALARIO" -> Categoria.SALARIO
-                            "INVESTIMENTO" -> Categoria.INVESTIMENTO
-                            "PRESENTE" -> Categoria.PRESENTE
-                            "VENDA" -> Categoria.VENDA
-                            else -> Categoria.OUTROS
-                        }
-
-                        val mov = Movimentacao(
-                            idMovimentacao = map["idMovimentacao"] as? String ?: UUID.randomUUID().toString(),
-                            idUtilizador = userId,
-                            valor = (map["valor"] as? Number)?.toDouble() ?: 0.0,
-                            descricao = map["descricao"] as? String ?: "",
-                            tipo = try { TipoMovimentacao.valueOf(map["tipo"] as? String ?: "DESPESA") } catch (e: Exception) { TipoMovimentacao.DESPESA },
-                            categoria = catEnum,
-                            statusPagamento = try { StatusPagamento.valueOf(map["statusPagamento"] as? String ?: "PENDENTE") } catch (e: Exception) { StatusPagamento.PENDENTE },
-                            modoPagamento = map["modoPagamento"] as? String ?: "",
-                            data = map["data"] as? String ?: ""
-                        )
-                        movimentacaoDao.inserir(mov)
-                    }
-                } catch (e: Exception) { 
-                    Log.e("REPO", "Erro ao converter item Firebase: ${e.message}")
+                val map = child.value as? Map<String, Any>
+                if (map != null) {
+                    val catStr = map["categoria"] as? String ?: "OUTROS"
+                    val catEnum = try { Categoria.valueOf(catStr.uppercase()) } catch(e: Exception) { Categoria.OUTROS }
+                    val mov = Movimentacao(
+                        idMovimentacao = map["idMovimentacao"] as? String ?: UUID.randomUUID().toString(),
+                        idUtilizador = userId,
+                        valor = (map["valor"] as? Number)?.toDouble() ?: 0.0,
+                        descricao = map["descricao"] as? String ?: "",
+                        tipo = try { TipoMovimentacao.valueOf(map["tipo"] as? String ?: "DESPESA") } catch (e: Exception) { TipoMovimentacao.DESPESA },
+                        categoria = catEnum,
+                        statusPagamento = try { StatusPagamento.valueOf(map["statusPagamento"] as? String ?: "PENDENTE") } catch (e: Exception) { StatusPagamento.PENDENTE },
+                        modoPagamento = map["modoPagamento"] as? String ?: "",
+                        data = map["data"] as? String ?: ""
+                    )
+                    movimentacaoDao.inserir(mov)
                 }
             }
-        } catch (e: Exception) {
-            Log.e("REPO", "Erro ao buscar Firebase: ${e.message}")
-        }
-
-        // 2. Retorna do Room (O Converters.kt agora protege contra o erro 'Contas')
-        return try {
-            movimentacaoDao.buscarPorUtilizador(userId)
-        } catch (e: Exception) {
-            Log.e("REPO", "Erro fatal no Room: ${e.message}")
-            emptyList()
-        }
+        } catch (e: Exception) { Log.e("REPO", "Erro sync: ${e.message}") }
+        return movimentacaoDao.buscarPorUtilizador(userId)
     }
 
     suspend fun buscarPorMes(userId: String, mes: Int, ano: Int): List<Movimentacao> {
@@ -107,9 +84,7 @@ class MovimentacaoRepository @Inject constructor(
         return todas.filter { mov ->
             try {
                 calendar.timeInMillis = mov.data.toLong()
-                val m = calendar.get(Calendar.MONTH) + 1
-                val a = calendar.get(Calendar.YEAR)
-                m == mes && a == ano
+                (calendar.get(Calendar.MONTH) + 1) == mes && calendar.get(Calendar.YEAR) == ano
             } catch (e: Exception) { false }
         }
     }
