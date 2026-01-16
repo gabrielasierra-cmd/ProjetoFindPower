@@ -43,7 +43,6 @@ class MovimentacaoController @Inject constructor(
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // DELAY DE 5 SEGUNDOS: Dá tempo para fechar a app e ver a notificação no ecrã inicial
                 Log.d("FCM_DEBUG", "Aguardando 5 segundos antes de enviar o push...")
                 delay(5000)
 
@@ -69,12 +68,17 @@ class MovimentacaoController @Inject constructor(
                     if (response.isSuccessful) {
                         Log.d("FCM_DEBUG", "Push enviado com sucesso!")
                     } else {
+                        // LOG ADICIONADO: Detalhes do erro da API do Google
                         val erro = response.errorBody()?.string()
-                        Log.e("FCM_DEBUG", "Erro Google: ${response.code()} - $erro")
+                        Log.e("FCM_DEBUG", "ERRO GOOGLE FCM: Código ${response.code()} - Mensagem: $erro")
                     }
+                } else {
+                    // LOG ADICIONADO: Aviso caso o token do usuário não exista no Firebase
+                    Log.w("FCM_DEBUG", "AVISO: Token FCM não encontrado no Firebase para o utilizador $uid")
                 }
             } catch (e: Exception) {
-                Log.e("FCM_DEBUG", "Erro: ${e.message}")
+                // LOG ADICIONADO: Detalhe da exceção capturada
+                Log.e("FCM_DEBUG", "EXCEÇÃO NO PROCESSO DE PUSH: ${e.message}", e)
             }
         }
     }
